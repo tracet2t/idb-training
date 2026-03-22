@@ -1,5 +1,6 @@
-import idbLogo from '../assets/idb-new-logo.webp';
+
 import React, { useState } from 'react';
+import idbLogo from '../assets/idb-new-logo.webp';
 import {
   Box,
   Card,
@@ -33,23 +34,23 @@ const GeometricBackground = () => (
     }}
   >
     <svg
-      width="100%"
+      width="50%"
       height="100%"
       xmlns="http://www.w3.org/2000/svg"
       style={{ position: 'absolute', top: 0, left: 0 }}
     >
       {/* large faint hexagons */}
-      <polygon points="200,50 260,85 260,155 200,190 140,155 140,85" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="1.5"/>
-      <polygon points="400,20 460,55 460,125 400,160 340,125 340,55" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="1.5"/>
-      <polygon points="650,80 710,115 710,185 650,220 590,185 590,115" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="1.5"/>
-      <polygon points="100,300 160,335 160,405 100,440 40,405 40,335" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="1.5"/>
-      <polygon points="800,250 860,285 860,355 800,390 740,355 740,285" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="1.5"/>
-      <polygon points="300,450 360,485 360,555 300,590 240,555 240,485" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="1.5"/>
-      <polygon points="600,400 660,435 660,505 600,540 540,505 540,435" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="1.5"/>
-      <polygon points="950,100 1010,135 1010,205 950,240 890,205 890,135" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="1.5"/>
-      <polygon points="1100,350 1160,385 1160,455 1100,490 1040,455 1040,385" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="1.5"/>
-      <polygon points="150,550 210,585 210,655 150,690 90,655 90,585" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="1.5"/>
-      <polygon points="750,550 810,585 810,655 750,690 690,655 690,585" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="1.5"/>
+      <polygon points="200,50 260,85 260,155 200,190 140,155 140,85" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="1.5" />
+      <polygon points="400,20 460,55 460,125 400,160 340,125 340,55" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="1.5" />
+      <polygon points="650,80 710,115 710,185 650,220 590,185 590,115" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="1.5" />
+      <polygon points="100,300 160,335 160,405 100,440 40,405 40,335" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="1.5" />
+      <polygon points="800,250 860,285 860,355 800,390 740,355 740,285" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="1.5" />
+      <polygon points="300,450 360,485 360,555 300,590 240,555 240,485" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="1.5" />
+      <polygon points="600,400 660,435 660,505 600,540 540,505 540,435" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="1.5" />
+      <polygon points="950,100 1010,135 1010,205 950,240 890,205 890,135" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="1.5" />
+      <polygon points="1100,350 1160,385 1160,455 1100,490 1040,455 1040,385" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="1.5" />
+      <polygon points="150,550 210,585 210,655 150,690 90,655 90,585" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="1.5" />
+      <polygon points="750,550 810,585 810,655 750,690 690,655 690,585" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="1.5" />
 
       {/* small dots grid */}
       {[...Array(12)].map((_, col) =>
@@ -65,21 +66,21 @@ const GeometricBackground = () => (
       )}
 
       {/* diagonal lines top right */}
-      <line x1="900" y1="0" x2="1200" y2="300" stroke="rgba(255,255,255,0.04)" strokeWidth="1"/>
-      <line x1="950" y1="0" x2="1200" y2="250" stroke="rgba(255,255,255,0.03)" strokeWidth="1"/>
-      <line x1="1000" y1="0" x2="1200" y2="200" stroke="rgba(255,255,255,0.03)" strokeWidth="1"/>
+      <line x1="900" y1="0" x2="1200" y2="300" stroke="rgba(255,255,255,0.04)" strokeWidth="1" />
+      <line x1="950" y1="0" x2="1200" y2="250" stroke="rgba(255,255,255,0.03)" strokeWidth="1" />
+      <line x1="1000" y1="0" x2="1200" y2="200" stroke="rgba(255,255,255,0.03)" strokeWidth="1" />
 
       {/* diagonal lines bottom left */}
-      <line x1="0" y1="500" x2="300" y2="800" stroke="rgba(255,255,255,0.04)" strokeWidth="1"/>
-      <line x1="0" y1="550" x2="250" y2="800" stroke="rgba(255,255,255,0.03)" strokeWidth="1"/>
-      <line x1="0" y1="600" x2="200" y2="800" stroke="rgba(255,255,255,0.03)" strokeWidth="1"/>
+      <line x1="0" y1="500" x2="300" y2="800" stroke="rgba(255,255,255,0.04)" strokeWidth="1" />
+      <line x1="0" y1="550" x2="250" y2="800" stroke="rgba(255,255,255,0.03)" strokeWidth="1" />
+      <line x1="0" y1="600" x2="200" y2="800" stroke="rgba(255,255,255,0.03)" strokeWidth="1" />
 
       {/* small triangles scattered */}
-      <polygon points="500,100 515,130 485,130" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="1"/>
-      <polygon points="850,300 865,330 835,330" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="1"/>
-      <polygon points="200,650 215,680 185,680" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="1"/>
-      <polygon points="1050,500 1065,530 1035,530" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="1"/>
-      <polygon points="350,200 365,230 335,230" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="1"/>
+      <polygon points="500,100 515,130 485,130" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
+      <polygon points="850,300 865,330 835,330" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
+      <polygon points="200,650 215,680 185,680" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
+      <polygon points="1050,500 1065,530 1035,530" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="1" />
+      <polygon points="350,200 365,230 335,230" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="1" />
     </svg>
   </Box>
 );
@@ -116,37 +117,49 @@ export default function LoginPage() {
       <Card
         elevation={12}
         sx={{
-          width: 420,
+          width: 320,
           borderRadius: 3,
           overflow: 'hidden',
           position: 'relative',
           zIndex: 1,
         }}
       >
+       
         {/* Top banner */}
-        <Box
-          sx={{
-            bgcolor: '#B0D4F1 ',
-            py: 3,
-            px: 4,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: 1.5,
-          }}
-        >
-          <img
-            src={idbLogo}
-            alt="IDB Logo"
-            style={{ height: 64, objectFit: 'contain' }}
-          />
-          <Typography
-            variant="subtitle1"
-            sx={{ color: 'black', fontWeight: 500, letterSpacing: 0.5 }}
-          >
-            Training & Development Analytics Platform
-          </Typography>
-        </Box>
+<Box
+  sx={{
+    bgcolor: '#B0D4F1',
+    borderBottom: '2px solid #1a3a5c',
+    py: 2,
+    px: 3,
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: 1,
+  }}
+>
+  <img
+    src={idbLogo}
+    alt="IDB Logo"
+    style={{
+      height: 70,
+      width: '100%',
+      objectFit: 'contain',
+    }}
+  />
+  <Typography
+    variant="body2"
+    sx={{
+      color: '#1a3a5c',
+      fontWeight: 600,
+      letterSpacing: 0.3,
+      textAlign: 'center',
+      fontSize: '0.78rem',
+    }}
+  >
+    Training & Development Analytics Platform
+  </Typography>
+</Box>
 
         <CardContent sx={{ px: 4, py: 3 }}>
           <Typography
@@ -163,6 +176,7 @@ export default function LoginPage() {
             color="text.secondary"
             mb={2.5}
             textAlign="center"
+             
           >
             Enter your credentials to access the platform
           </Typography>
@@ -179,6 +193,7 @@ export default function LoginPage() {
             <TextField
               label="Email Address"
               type="email"
+              size="small"
               fullWidth
               required
               value={email}
@@ -202,6 +217,7 @@ export default function LoginPage() {
             <TextField
               label="Password"
               type={showPassword ? 'text' : 'password'}
+              size="small"
               fullWidth
               required
               value={password}
@@ -244,6 +260,7 @@ export default function LoginPage() {
                   color: '#C8960C',
                   cursor: 'pointer',
                   fontWeight: 500,
+                  
                   '&:hover': { textDecoration: 'underline' },
                 }}
               >
@@ -251,23 +268,26 @@ export default function LoginPage() {
               </Typography>
             </Box>
 
-            <Button
-              type="submit"
-              variant="contained"
-              fullWidth
-              size="large"
-              sx={{
-                bgcolor: '#8B1A1A',
-                py: 1.3,
-                fontWeight: 600,
-                letterSpacing: 0.3,
-                textTransform: 'none',
-                fontSize: '1rem',
-                '&:hover': { bgcolor: '#6e1414' },
-              }}
-            >
-              Sign In
-            </Button>
+            <Box display="flex" justifyContent="center">
+              <Button
+                type="submit"
+                variant="contained"
+                size="small"
+                sx={{
+                  bgcolor: '#8B1A1A',
+                  py: 0.8,
+                  px: 4,
+                  fontWeight: 600,
+                  letterSpacing: 0.3,
+                  textTransform: 'none',
+                  fontSize: '0.85rem',
+                  width: '50%',
+                  '&:hover': { bgcolor: '#6e1414' },
+                }}
+              >
+                Sign In
+              </Button>
+            </Box>
           </form>
         </CardContent>
 
