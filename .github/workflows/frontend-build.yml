@@ -1,4 +1,3 @@
-.github/workflows/frontend-build.yml
 name: Frontend Build Check
 
 on:
