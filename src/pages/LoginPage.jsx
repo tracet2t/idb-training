@@ -12,6 +12,7 @@ import {
   IconButton,
   Divider,
   Snackbar,
+  CircularProgress,
 } from '@mui/material';
 import {
   Visibility,
@@ -19,6 +20,9 @@ import {
   AccountCircle,
   LockOutlined,
 } from '@mui/icons-material';
+import { useMutation } from '@tanstack/react-query';
+import { login } from '../services/authService';
+import useAuthStore from '../store/authStore';
 
 const GeometricBackground = () => (
   <Box
@@ -80,12 +84,15 @@ const GeometricBackground = () => (
 );
 
 export default function LoginPage() {
+
+  // 1. all state variables first
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [popup, setPopup] = useState({ open: false, message: '', severity: 'success' });
 
+  // 2. helper functions
   const showPopup = (message, severity) => {
     setPopup({ open: true, message, severity });
   };
@@ -94,6 +101,29 @@ export default function LoginPage() {
     setPopup((prev) => ({ ...prev, open: false }));
   };
 
+  // 3. Zustand
+  const setAuth = useAuthStore((state) => state.setAuth);
+
+  // 4. TanStack Query mutation
+  const loginMutation = useMutation({
+    mutationFn: ({ email, password }) => login(email, password),
+
+    onSuccess: (data) => {
+      setAuth(data.user, data.user.role);
+      showPopup('Login successful! Redirecting...', 'success');
+      setTimeout(() => {
+        window.location.href = '/dashboard';
+      }, 1000);
+    },
+
+    onError: (err) => {
+      const message =
+        err.response?.data?.message || 'Login failed. Please try again.';
+      showPopup(message, 'error');
+    },
+  });
+
+  // 5. form submit handler
   const handleSubmit = (e) => {
     e.preventDefault();
     setError('');
@@ -113,9 +143,7 @@ export default function LoginPage() {
       return;
     }
 
-    // Phase 1 — fake success (will be replaced in Phase 2)
-    showPopup('Login successful! Redirecting...', 'success');
-    console.log('Logging in with', email, password);
+    loginMutation.mutate({ email, password });
   };
 
   return (
@@ -286,6 +314,7 @@ export default function LoginPage() {
                 type="submit"
                 variant="contained"
                 size="small"
+                disabled={loginMutation.isPending}
                 sx={{
                   bgcolor: '#8B1A1A',
                   py: 0.8,
@@ -298,7 +327,11 @@ export default function LoginPage() {
                   '&:hover': { bgcolor: '#6e1414' },
                 }}
               >
-                Sign In
+                {loginMutation.isPending ? (
+                  <CircularProgress size={18} sx={{ color: '#ffffff' }} />
+                ) : (
+                  'Sign In'
+                )}
               </Button>
             </Box>
           </form>
