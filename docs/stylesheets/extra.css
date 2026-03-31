@@ -1,0 +1,69 @@
+[data-md-color-scheme="default"] {
+  --md-primary-fg-color: #1a3a5c;
+  --md-primary-fg-color--light: #2d6a9f;
+  --md-primary-fg-color--dark: #0f2035;
+  --md-accent-fg-color: #C8960C;
+}
+
+/* Header */
+.md-header {
+  background-color: #1a3a5c !important;
+  color: #ffffff !important;
+}
+
+.md-header__title {
+  color: #ffffff !important;
+}
+
+.md-header__button {
+  color: #ffffff !important;
+}
+
+/* Navigation tabs */
+.md-tabs {
+  background-color: #2d6a9f !important;
+  color: #ffffff !important;
+}
+
+.md-tabs__link {
+  color: #ffffff !important;
+  opacity: 1 !important;
+}
+
+.md-tabs__link--active {
+  color: #C8960C !important;
+}
+
+/* Footer */
+.md-footer {
+  background-color: #1a3a5c !important;
+  color: #ffffff !important;
+}
+
+.md-footer-meta {
+  background-color: #0f2035 !important;
+}
+
+.md-footer__title {
+  color: #ffffff !important;
+}
+
+.md-footer__link {
+  color: #B0D4F1 !important;
+}
+
+/* Active nav link */
+.md-nav__link--active {
+  color: #C8960C !important;
+}
+
+/* Links */
+.md-content a {
+  color: #1a3a5c !important;
+}
+
+/* Search */
+.md-search__input {
+  background-color: #2d6a9f !important;
+  color: #ffffff !important;
+}

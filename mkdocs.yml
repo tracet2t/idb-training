@@ -1,0 +1,23 @@
+site_name: IDB Training & Development Analytics Platform
+site_description: Documentation for IDB Training & Development Analytics Platform frontend
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: custom
+      accent: custom
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - search.highlight
+    - search.suggest
+  custom_dir: docs/overrides
+
+extra_css:
+  - stylesheets/extra.css
+
+nav:
+  - Home: index.md
+  - Framework Design: frontend_frameworks.md
+  - Color Palette: color-palette.md
