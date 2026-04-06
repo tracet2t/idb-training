@@ -10,9 +10,8 @@ Frontend application for the Industrial Development Board of Ceylon's Training &
 |---|---|
 | React.js 18 | Core UI framework |
 | Vite | Build tool |
-| MUI v5 | Component library |
-| MUI X Data Grid | Advanced tables |
-| MUI X Date Pickers | Date range inputs |
+| Tailwind CSS | Utility-first styling |
+| Lucide React | Icon library |
 | Chart.js | Dashboard charts |
 | React Router DOM | Routing + protected routes |
 | Leaflet + react-leaflet | Sri Lanka interactive map |
@@ -34,7 +33,7 @@ src/
 ├── pages/          → one file per route
 ├── services/       → all API call functions
 ├── store/          → Zustand global state
-├── theme/          → MUI theme + IDB color palette
+├── theme/          → IDB color palette + Tailwind config
 ├── routes/         → route config + protected route
 └── utils/          → date helpers, formatters
 docs/
