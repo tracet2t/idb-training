@@ -40,7 +40,7 @@ export default function LoginPage() {
   const [toast, setToast] = useState({ open: false, message: '', type: 'error' });
 
   const showPopup = (message, severity) => {
-    setPopup({ open: true, message, severity });
+    setToast({ open: true, message, type: severity });
   };
 
   // 3. Zustand
