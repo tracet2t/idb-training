@@ -29,7 +29,7 @@ const GeometricBackground = () => (
 );
 
 export default function LoginPage() {
-  const [email, setEmail]       = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
   // Per-field inline errors
@@ -39,9 +39,8 @@ export default function LoginPage() {
   // Toast only for API errors (login failed)
   const [toast, setToast] = useState({ open: false, message: '', type: 'error' });
 
-  // Show toast/popup utility
-  const showPopup = (message, type) => {  
-    setToast({ open: true, message, type });
+  const showPopup = (message, severity) => {
+    setPopup({ open: true, message, severity });
   };
 
   // 3. Zustand
