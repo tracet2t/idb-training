@@ -4,7 +4,7 @@ import React, { useEffect } from 'react';
  * Toast notification component
  * Floats fixed at top-center, never affects page layout
  */
-export const Toast = ({ message, type = 'error', isOpen, onClose, duration = 4000 }) => {
+export const Toast = ({ message, type = 'info', isOpen, onClose, duration = 4000 }) => {
   useEffect(() => {
     if (isOpen && duration > 0) {
       const timer = setTimeout(onClose, duration);
