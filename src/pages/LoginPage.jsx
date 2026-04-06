@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import idbLogo from '../assets/idb-new-logo.webp';
 import {
@@ -12,6 +11,8 @@ import {
   InputAdornment,
   IconButton,
   Divider,
+  Snackbar,
+  CircularProgress,
 } from '@mui/material';
 import {
   Visibility,
@@ -19,6 +20,9 @@ import {
   AccountCircle,
   LockOutlined,
 } from '@mui/icons-material';
+import { useMutation } from '@tanstack/react-query';
+import { login } from '../services/authService';
+import useAuthStore from '../store/authStore';
 
 const GeometricBackground = () => (
   <Box
@@ -34,12 +38,11 @@ const GeometricBackground = () => (
     }}
   >
     <svg
-      width="50%"
+      width="100%"
       height="100%"
       xmlns="http://www.w3.org/2000/svg"
       style={{ position: 'absolute', top: 0, left: 0 }}
     >
-      {/* large faint hexagons */}
       <polygon points="200,50 260,85 260,155 200,190 140,155 140,85" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="1.5" />
       <polygon points="400,20 460,55 460,125 400,160 340,125 340,55" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="1.5" />
       <polygon points="650,80 710,115 710,185 650,220 590,185 590,115" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="1.5" />
@@ -52,7 +55,6 @@ const GeometricBackground = () => (
       <polygon points="150,550 210,585 210,655 150,690 90,655 90,585" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="1.5" />
       <polygon points="750,550 810,585 810,655 750,690 690,655 690,585" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="1.5" />
 
-      {/* small dots grid */}
       {[...Array(12)].map((_, col) =>
         [...Array(8)].map((_, row) => (
           <circle
@@ -65,17 +67,13 @@ const GeometricBackground = () => (
         ))
       )}
 
-      {/* diagonal lines top right */}
       <line x1="900" y1="0" x2="1200" y2="300" stroke="rgba(255,255,255,0.04)" strokeWidth="1" />
       <line x1="950" y1="0" x2="1200" y2="250" stroke="rgba(255,255,255,0.03)" strokeWidth="1" />
       <line x1="1000" y1="0" x2="1200" y2="200" stroke="rgba(255,255,255,0.03)" strokeWidth="1" />
-
-      {/* diagonal lines bottom left */}
       <line x1="0" y1="500" x2="300" y2="800" stroke="rgba(255,255,255,0.04)" strokeWidth="1" />
       <line x1="0" y1="550" x2="250" y2="800" stroke="rgba(255,255,255,0.03)" strokeWidth="1" />
       <line x1="0" y1="600" x2="200" y2="800" stroke="rgba(255,255,255,0.03)" strokeWidth="1" />
 
-      {/* small triangles scattered */}
       <polygon points="500,100 515,130 485,130" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
       <polygon points="850,300 865,330 835,330" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
       <polygon points="200,650 215,680 185,680" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
@@ -86,22 +84,66 @@ const GeometricBackground = () => (
 );
 
 export default function LoginPage() {
+
+  // 1. all state variables first
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [popup, setPopup] = useState({ open: false, message: '', severity: 'success' });
 
+  // 2. helper functions
+  const showPopup = (message, severity) => {
+    setPopup({ open: true, message, severity });
+  };
+
+  const handleClosePopup = () => {
+    setPopup((prev) => ({ ...prev, open: false }));
+  };
+
+  // 3. Zustand
+  const setAuth = useAuthStore((state) => state.setAuth);
+
+  // 4. TanStack Query mutation
+  const loginMutation = useMutation({
+    mutationFn: ({ email, password }) => login(email, password),
+
+    onSuccess: (data) => {
+      setAuth(data.user, data.user.role);
+      showPopup('Login successful! Redirecting...', 'success');
+      setTimeout(() => {
+        window.location.href = '/dashboard';
+      }, 1000);
+    },
+
+    onError: (err) => {
+      const message =
+        err.response?.data?.message || 'Login failed. Please try again.';
+      showPopup(message, 'error');
+    },
+  });
+
+  // 5. form submit handler
   const handleSubmit = (e) => {
     e.preventDefault();
     setError('');
 
     if (!email || !password) {
-      setError('Please fill in all fields.');
+      showPopup('Please fill in all fields.', 'error');
       return;
     }
 
-    // TODO: replace with real API call in T012
-    console.log('Logging in with', email, password);
+    if (!email.includes('@')) {
+      showPopup('Please enter a valid email address.', 'error');
+      return;
+    }
+
+    if (password.length < 6) {
+      showPopup('Password must be at least 6 characters.', 'error');
+      return;
+    }
+
+    loginMutation.mutate({ email, password });
   };
 
   return (
@@ -124,42 +166,41 @@ export default function LoginPage() {
           zIndex: 1,
         }}
       >
-       
         {/* Top banner */}
-<Box
-  sx={{
-    bgcolor: '#B0D4F1',
-    borderBottom: '2px solid #1a3a5c',
-    py: 2,
-    px: 3,
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: 1,
-  }}
->
-  <img
-    src={idbLogo}
-    alt="IDB Logo"
-    style={{
-      height: 70,
-      width: '100%',
-      objectFit: 'contain',
-    }}
-  />
-  <Typography
-    variant="body2"
-    sx={{
-      color: '#1a3a5c',
-      fontWeight: 600,
-      letterSpacing: 0.3,
-      textAlign: 'center',
-      fontSize: '0.78rem',
-    }}
-  >
-    Training & Development Analytics Platform
-  </Typography>
-</Box>
+        <Box
+          sx={{
+            bgcolor: '#B0D4F1',
+            borderBottom: '2px solid #1a3a5c',
+            py: 2,
+            px: 3,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 1,
+          }}
+        >
+          <img
+            src={idbLogo}
+            alt="IDB Logo"
+            style={{
+              height: 70,
+              width: '100%',
+              objectFit: 'contain',
+            }}
+          />
+          <Typography
+            variant="body2"
+            sx={{
+              color: '#1a3a5c',
+              fontWeight: 600,
+              letterSpacing: 0.3,
+              textAlign: 'center',
+              fontSize: '0.78rem',
+            }}
+          >
+            Training & Development Analytics Platform
+          </Typography>
+        </Box>
 
         <CardContent sx={{ px: 4, py: 3 }}>
           <Typography
@@ -172,11 +213,12 @@ export default function LoginPage() {
             Sign In
           </Typography>
           <Typography
-            variant="body2"
+            variant="caption"
             color="text.secondary"
             mb={2.5}
             textAlign="center"
-             
+            display="block"
+            sx={{ fontSize: '0.65rem' }}
           >
             Enter your credentials to access the platform
           </Typography>
@@ -260,7 +302,6 @@ export default function LoginPage() {
                   color: '#C8960C',
                   cursor: 'pointer',
                   fontWeight: 500,
-                  
                   '&:hover': { textDecoration: 'underline' },
                 }}
               >
@@ -273,6 +314,7 @@ export default function LoginPage() {
                 type="submit"
                 variant="contained"
                 size="small"
+                disabled={loginMutation.isPending}
                 sx={{
                   bgcolor: '#8B1A1A',
                   py: 0.8,
@@ -285,7 +327,11 @@ export default function LoginPage() {
                   '&:hover': { bgcolor: '#6e1414' },
                 }}
               >
-                Sign In
+                {loginMutation.isPending ? (
+                  <CircularProgress size={18} sx={{ color: '#ffffff' }} />
+                ) : (
+                  'Sign In'
+                )}
               </Button>
             </Box>
           </form>
@@ -305,6 +351,24 @@ export default function LoginPage() {
           </Typography>
         </Box>
       </Card>
+
+      {/* Popup messages */}
+      <Snackbar
+        open={popup.open}
+        autoHideDuration={4000}
+        onClose={handleClosePopup}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert
+          onClose={handleClosePopup}
+          severity={popup.severity}
+          variant="filled"
+          sx={{ width: '100%', fontWeight: 500 }}
+        >
+          {popup.message}
+        </Alert>
+      </Snackbar>
+
     </Box>
   );
 }
