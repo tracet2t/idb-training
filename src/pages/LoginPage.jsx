@@ -39,21 +39,34 @@ export default function LoginPage() {
   // Toast only for API errors (login failed)
   const [toast, setToast] = useState({ open: false, message: '', type: 'error' });
 
+  // Show toast/popup utility
+  const showPopup = (message, type) => {  
+    setToast({ open: true, message, type });
+  };
+
+  // 3. Zustand
   const setAuth = useAuthStore((state) => state.setAuth);
 
+  // 4. TanStack Query mutation
   const loginMutation = useMutation({
     mutationFn: ({ email, password }) => login(email, password),
+
     onSuccess: (data) => {
       setAuth(data.user, data.user.role);
-      setToast({ open: true, message: 'Login successful! Redirecting...', type: 'success' });
-      setTimeout(() => { window.location.href = '/dashboard'; }, 1000);
+      showPopup('Login successful! Redirecting...', 'success');
+      setTimeout(() => {
+        window.location.href = '/dashboard';
+      }, 1000);
     },
+
     onError: (err) => {
-      const message = err.response?.data?.message || 'Login failed. Please try again.';
-      setToast({ open: true, message, type: 'error' });
+      const message =
+        err.response?.data?.message || 'Login failed. Please try again.';
+      showPopup(message, 'error');
     },
   });
-
+  
+  // 5. form submit handler
   const handleSubmit = (e) => {
     e.preventDefault();
 
