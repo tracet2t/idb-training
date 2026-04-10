@@ -4,7 +4,7 @@
 
 The application follows a component-based architecture using React.js.
 
-- **UI Layer:** Built using Material UI components
+- **UI Layer:** Built using Tailwind CSS for utility-first styling
 - **State Management:** Zustand is used to manage authentication and global state
 - **API Communication:** Axios is used to send HTTP requests to backend services
 - **Routing:** React Router DOM is used for navigation and protected routes
@@ -40,7 +40,7 @@ Axios is used for all API calls.
 ## Libraries Summary
 
 - **React.js:** Core frontend framework
-- **Material UI v5:** UI component library
+- **Tailwind CSS:** Utility-first CSS framework for styling
 - **React Router DOM:** Routing and navigation
 - **Zustand:** Global state management
 - **Axios:** HTTP requests
@@ -48,5 +48,6 @@ Axios is used for all API calls.
 - **Chart.js / react-chartjs-2:** Charts
 - **Leaflet / react-leaflet:** Maps and spatial components
 - **date-fns:** Date utilities
-- **Lucide:** Icons
+- **Lucide React:** Icons
 - **jsPDF / xlsx:** Export reports (PDF/Excel)
+- **TanStack Query:** Server state management

@@ -1,104 +1,46 @@
 import React, { useState } from 'react';
 import idbLogo from '../assets/idb-new-logo.webp';
-import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  TextField,
-  Button,
-  Alert,
-  InputAdornment,
-  IconButton,
-  Divider,
-  Snackbar,
-  CircularProgress,
-} from '@mui/material';
-import {
-  Visibility,
-  VisibilityOff,
-  AccountCircle,
-  LockOutlined,
-} from '@mui/icons-material';
 import { useMutation } from '@tanstack/react-query';
 import { login } from '../services/authService';
 import useAuthStore from '../store/authStore';
+import { Mail, Lock } from 'lucide-react';
+
+import { FormInput } from '../components/FormInput';
+import { Toast } from '../components/Toast';
 
 const GeometricBackground = () => (
-  <Box
-    sx={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      width: '100%',
-      height: '100%',
-      zIndex: 0,
-      background: 'linear-gradient(135deg, #0f2035 0%, #1a3a5c 50%, #4a0f0f 100%)',
-      overflow: 'hidden',
-    }}
+  <div className="fixed inset-0 z-0 overflow-hidden"
+    style={{ background: 'linear-gradient(135deg, #0f2035 0%, #1a3a5c 50%, #4a0f0f 100%)' }}
   >
-    <svg
-      width="100%"
-      height="100%"
-      xmlns="http://www.w3.org/2000/svg"
-      style={{ position: 'absolute', top: 0, left: 0 }}
-    >
+    <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" className="absolute inset-0">
       <polygon points="200,50 260,85 260,155 200,190 140,155 140,85" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="1.5" />
       <polygon points="400,20 460,55 460,125 400,160 340,125 340,55" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="1.5" />
       <polygon points="650,80 710,115 710,185 650,220 590,185 590,115" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="1.5" />
       <polygon points="100,300 160,335 160,405 100,440 40,405 40,335" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="1.5" />
       <polygon points="800,250 860,285 860,355 800,390 740,355 740,285" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="1.5" />
       <polygon points="300,450 360,485 360,555 300,590 240,555 240,485" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="1.5" />
-      <polygon points="600,400 660,435 660,505 600,540 540,505 540,435" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="1.5" />
-      <polygon points="950,100 1010,135 1010,205 950,240 890,205 890,135" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="1.5" />
-      <polygon points="1100,350 1160,385 1160,455 1100,490 1040,455 1040,385" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="1.5" />
-      <polygon points="150,550 210,585 210,655 150,690 90,655 90,585" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="1.5" />
-      <polygon points="750,550 810,585 810,655 750,690 690,655 690,585" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="1.5" />
-
       {[...Array(12)].map((_, col) =>
         [...Array(8)].map((_, row) => (
-          <circle
-            key={`${col}-${row}`}
-            cx={80 + col * 110}
-            cy={80 + row * 95}
-            r="1.5"
-            fill="rgba(255,255,255,0.07)"
-          />
+          <circle key={`${col}-${row}`} cx={80 + col * 110} cy={80 + row * 95} r="1.5" fill="rgba(255,255,255,0.07)" />
         ))
       )}
-
-      <line x1="900" y1="0" x2="1200" y2="300" stroke="rgba(255,255,255,0.04)" strokeWidth="1" />
-      <line x1="950" y1="0" x2="1200" y2="250" stroke="rgba(255,255,255,0.03)" strokeWidth="1" />
-      <line x1="1000" y1="0" x2="1200" y2="200" stroke="rgba(255,255,255,0.03)" strokeWidth="1" />
-      <line x1="0" y1="500" x2="300" y2="800" stroke="rgba(255,255,255,0.04)" strokeWidth="1" />
-      <line x1="0" y1="550" x2="250" y2="800" stroke="rgba(255,255,255,0.03)" strokeWidth="1" />
-      <line x1="0" y1="600" x2="200" y2="800" stroke="rgba(255,255,255,0.03)" strokeWidth="1" />
-
-      <polygon points="500,100 515,130 485,130" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
-      <polygon points="850,300 865,330 835,330" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
-      <polygon points="200,650 215,680 185,680" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
-      <polygon points="1050,500 1065,530 1035,530" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="1" />
-      <polygon points="350,200 365,230 335,230" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="1" />
     </svg>
-  </Box>
+  </div>
 );
 
 export default function LoginPage() {
-
-  // 1. all state variables first
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState('');
-  const [popup, setPopup] = useState({ open: false, message: '', severity: 'success' });
 
-  // 2. helper functions
+  // Per-field inline errors
+  const [emailError, setEmailError]       = useState('');
+  const [passwordError, setPasswordError] = useState('');
+
+  // Toast only for API errors (login failed)
+  const [toast, setToast] = useState({ open: false, message: '', type: 'error' });
+
   const showPopup = (message, severity) => {
-    setPopup({ open: true, message, severity });
-  };
-
-  const handleClosePopup = () => {
-    setPopup((prev) => ({ ...prev, open: false }));
+    setToast({ open: true, message, type: severity });
   };
 
   // 3. Zustand
@@ -122,253 +64,197 @@ export default function LoginPage() {
       showPopup(message, 'error');
     },
   });
-
+  
   // 5. form submit handler
   const handleSubmit = (e) => {
     e.preventDefault();
-    setError('');
 
-    if (!email || !password) {
-      showPopup('Please fill in all fields.', 'error');
-      return;
+    // Reset errors
+    setEmailError('');
+    setPasswordError('');
+
+    let valid = true;
+
+    if (!email) {
+      setEmailError('Email address is required.');
+      valid = false;
+    } else if (!email.includes('@')) {
+      setEmailError('Please enter a valid email address.');
+      valid = false;
     }
 
-    if (!email.includes('@')) {
-      showPopup('Please enter a valid email address.', 'error');
-      return;
+    if (!password) {
+      setPasswordError('Password is required.');
+      valid = false;
+    } else if (password.length < 6) {
+      setPasswordError('Password must be at least 6 characters.');
+      valid = false;
     }
 
-    if (password.length < 6) {
-      showPopup('Password must be at least 6 characters.', 'error');
-      return;
-    }
+    if (!valid) return;
 
     loginMutation.mutate({ email, password });
   };
 
   return (
-    <Box
-      display="flex"
-      justifyContent="center"
-      alignItems="center"
-      minHeight="100vh"
-      sx={{ position: 'relative' }}
-    >
+    <div className="relative flex items-center justify-center min-h-screen">
       <GeometricBackground />
 
-      <Card
-        elevation={12}
-        sx={{
-          width: 320,
-          borderRadius: 3,
-          overflow: 'hidden',
-          position: 'relative',
-          zIndex: 1,
-        }}
-      >
+      {/* Toast only for API-level errors/success */}
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        isOpen={toast.open}
+        onClose={() => setToast(prev => ({ ...prev, open: false }))}
+      />
+
+      {/* Card */}
+      <div style={{
+        position: 'relative',
+        zIndex: 10,
+        width: '380px',
+        borderRadius: '16px',
+        overflow: 'hidden',
+        boxShadow: '0 20px 50px rgba(0,0,0,0.4)',
+        backgroundColor: '#ffffff',
+      }}>
+
         {/* Top banner */}
-        <Box
-          sx={{
-            bgcolor: '#B0D4F1',
-            borderBottom: '2px solid #1a3a5c',
-            py: 2,
-            px: 3,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: 1,
-          }}
-        >
-          <img
-            src={idbLogo}
-            alt="IDB Logo"
-            style={{
-              height: 70,
-              width: '100%',
-              objectFit: 'contain',
-            }}
-          />
-          <Typography
-            variant="body2"
-            sx={{
-              color: '#1a3a5c',
-              fontWeight: 600,
-              letterSpacing: 0.3,
-              textAlign: 'center',
-              fontSize: '0.78rem',
-            }}
-          >
-            Training & Development Analytics Platform
-          </Typography>
-        </Box>
+        <div style={{
+          backgroundColor: '#B0D4F1',
+          borderBottom: '2px solid #1a3a5c',
+          padding: '16px 20px 12px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '6px',
+        }}>
+          <img src={idbLogo} alt="IDB Logo" style={{ height: '60px', objectFit: 'contain' }} />
+          <p style={{
+            fontSize: '0.72rem',
+            fontWeight: '600',
+            fontStyle: 'italic',
+            color: '#1a3a5c',
+            textAlign: 'center',
+            margin: 0,
+          }}>
+            Training &amp; Development Analytics Platform
+          </p>
+        </div>
 
-        <CardContent sx={{ px: 4, py: 3 }}>
-          <Typography
-            variant="h6"
-            fontWeight="bold"
-            color="#1a3a5c"
-            mb={0.5}
-            textAlign="center"
-          >
+        {/* Form area */}
+        <div style={{ padding: '20px 24px 16px' }}>
+
+          <h2 style={{
+            textAlign: 'center',
+            fontWeight: '700',
+            fontSize: '1.4rem',
+            color: '#1a3a5c',
+            margin: '0 0 4px',
+          }}>
             Sign In
-          </Typography>
-          <Typography
-            variant="caption"
-            color="text.secondary"
-            mb={2.5}
-            textAlign="center"
-            display="block"
-            sx={{ fontSize: '0.65rem' }}
-          >
+          </h2>
+          <p style={{
+            textAlign: 'center',
+            color: '#6b7280',
+            fontSize: '0.78rem',
+            margin: '0 0 14px',
+          }}>
             Enter your credentials to access the platform
-          </Typography>
+          </p>
 
-          <Divider sx={{ mb: 2.5 }} />
-
-          {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {error}
-            </Alert>
-          )}
+          <hr style={{ border: 'none', borderTop: '1px solid #e5e7eb', marginBottom: '14px' }} />
 
           <form onSubmit={handleSubmit}>
-            <TextField
+
+            {/* Email — error shows inline below the field */}
+            <FormInput
               label="Email Address"
               type="email"
-              size="small"
-              fullWidth
-              required
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              sx={{
-                mb: 2,
-                '& .MuiOutlinedInput-root': {
-                  '&.Mui-focused fieldset': { borderColor: '#C8960C' },
-                },
-                '& .MuiInputLabel-root.Mui-focused': { color: '#C8960C' },
-              }}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <AccountCircle fontSize="small" sx={{ color: '#C8960C' }} />
-                  </InputAdornment>
-                ),
-              }}
-            />
-
-            <TextField
-              label="Password"
-              type={showPassword ? 'text' : 'password'}
-              size="small"
-              fullWidth
+              onChange={(e) => { setEmail(e.target.value); setEmailError(''); }}
+              placeholder="ishari1234@gmail.com"
+              icon={Mail}
+              error={emailError}
               required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              sx={{
-                mb: 1,
-                '& .MuiOutlinedInput-root': {
-                  '&.Mui-focused fieldset': { borderColor: '#C8960C' },
-                },
-                '& .MuiInputLabel-root.Mui-focused': { color: '#C8960C' },
-              }}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <LockOutlined fontSize="small" sx={{ color: '#C8960C' }} />
-                  </InputAdornment>
-                ),
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton
-                      onClick={() => setShowPassword((prev) => !prev)}
-                      edge="end"
-                      size="small"
-                    >
-                      {showPassword ? (
-                        <VisibilityOff fontSize="small" />
-                      ) : (
-                        <Visibility fontSize="small" />
-                      )}
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              }}
             />
 
-            <Box display="flex" justifyContent="flex-end" mb={3}>
-              <Typography
-                variant="body2"
-                sx={{
-                  color: '#C8960C',
-                  cursor: 'pointer',
-                  fontWeight: 500,
-                  '&:hover': { textDecoration: 'underline' },
-                }}
-              >
-                Forgot password?
-              </Typography>
-            </Box>
+            {/* Password — error shows inline below the field */}
+            <FormInput
+              label="Password"
+              type="password"
+              value={password}
+              onChange={(e) => { setPassword(e.target.value); setPasswordError(''); }}
+              placeholder="•••••••"
+              icon={Lock}
+              error={passwordError}
+              required
+            />
 
-            <Box display="flex" justifyContent="center">
-              <Button
-                type="submit"
-                variant="contained"
-                size="small"
-                disabled={loginMutation.isPending}
-                sx={{
-                  bgcolor: '#8B1A1A',
-                  py: 0.8,
-                  px: 4,
-                  fontWeight: 600,
-                  letterSpacing: 0.3,
-                  textTransform: 'none',
-                  fontSize: '0.85rem',
-                  width: '50%',
-                  '&:hover': { bgcolor: '#6e1414' },
-                }}
-              >
-                {loginMutation.isPending ? (
-                  <CircularProgress size={18} sx={{ color: '#ffffff' }} />
-                ) : (
-                  'Sign In'
-                )}
-              </Button>
-            </Box>
+            {/* Forgot password */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '-4px', marginBottom: '14px' }}>
+              <span style={{
+                fontSize: '0.75rem',
+                fontWeight: '600',
+                color: '#C8960C',
+                cursor: 'pointer',
+              }}>
+                Forgot password?
+              </span>
+            </div>
+
+            {/* Submit */}
+            <button
+              type="submit"
+              disabled={loginMutation.isPending}
+              style={{
+                width: '100%',
+                padding: '10px',
+                backgroundColor: '#8B1A1A',
+                color: '#fff',
+                fontWeight: '700',
+                fontSize: '0.88rem',
+                letterSpacing: '0.04em',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: loginMutation.isPending ? 'not-allowed' : 'pointer',
+                opacity: loginMutation.isPending ? 0.75 : 1,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                transition: 'opacity 0.2s',
+              }}
+            >
+              {loginMutation.isPending ? (
+                <>
+                  <svg style={{ width: '14px', height: '14px', animation: 'spin 1s linear infinite' }}
+                    xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" style={{ opacity: 0.25 }} />
+                    <path fill="currentColor" d="M4 12a8 8 0 018-8v8z" style={{ opacity: 0.75 }} />
+                  </svg>
+                  Signing in...
+                </>
+              ) : 'Sign In'}
+            </button>
+
           </form>
-        </CardContent>
+        </div>
 
         {/* Footer */}
-        <Box
-          sx={{
-            bgcolor: '#f0f4f8',
-            py: 1.5,
-            textAlign: 'center',
-            borderTop: '1px solid #dce6f0',
-          }}
-        >
-          <Typography variant="caption" color="text.secondary">
-            Industrial Development Board of Ceylon © {new Date().getFullYear()}
-          </Typography>
-        </Box>
-      </Card>
+        <div style={{
+          backgroundColor: '#f0f4f8',
+          borderTop: '1px solid #e5e7eb',
+          padding: '10px',
+          textAlign: 'center',
+          fontSize: '0.7rem',
+          color: '#9ca3af',
+        }}>
+          Industrial Development Board of Ceylon © {new Date().getFullYear()}
+        </div>
 
-      {/* Popup messages */}
-      <Snackbar
-        open={popup.open}
-        autoHideDuration={4000}
-        onClose={handleClosePopup}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-      >
-        <Alert
-          onClose={handleClosePopup}
-          severity={popup.severity}
-          variant="filled"
-          sx={{ width: '100%', fontWeight: 500 }}
-        >
-          {popup.message}
-        </Alert>
-      </Snackbar>
-
-    </Box>
+      </div>
+    </div>
   );
 }
