@@ -145,13 +145,18 @@ function AddParticipantDialog() {
   );
 }
 
-// --- Column widths (shared between header and body) ---
-const colStyle = "160px 2fr 150px 100px 110px 120px 100px";
+// --- Column widths ---
+
 // --- Main Page ---
 export default function Participants() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [rowsPerPage, setRowsPerPage] = useState(10);
+   const [colStyle] = useState(
+    window.innerWidth >= 1280
+      ? "180px 1fr 150px 100px 120px 100px 80px"
+      : "160px 180px 130px 90px 100px 80px 70px"
+  );
 
   const filtered = mockParticipants.filter((p) => {
     const matchesSearch =
@@ -171,7 +176,6 @@ export default function Participants() {
         style={{ backgroundColor: colors.navyMain }}
       >
         <div>
-          {/* Logo */}
           <div className="flex items-center gap-3 px-4 mb-8">
             <div
               className="w-9 h-9 rounded-lg flex items-center justify-center text-white font-bold text-sm"
@@ -185,7 +189,6 @@ export default function Participants() {
             </div>
           </div>
 
-          {/* Nav Links */}
           <nav className="flex flex-col gap-1">
             <NavItem icon={<LayoutDashboard className="w-4 h-4" />} label="Dashboard" />
             <NavItem icon={<BookOpen className="w-4 h-4" />} label="Programs" />
@@ -196,7 +199,6 @@ export default function Participants() {
           </nav>
         </div>
 
-        {/* Bottom User */}
         <div className="px-4">
           <div className="flex items-center gap-3 mb-4">
             <div
@@ -289,37 +291,45 @@ export default function Participants() {
             className="rounded-xl border flex-1 flex flex-col overflow-hidden"
             style={{ backgroundColor: colors.cardBg, borderColor: '#e2e8f0' }}
           >
-            {/* Fixed Header */}
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: colStyle,
-                backgroundColor: colors.pageBg,
-                borderBottom: `1px solid #e2e8f0`,
-                padding: '12px 16px',
-                flexShrink: 0,
-              }}
-            >
-              {['NIC', 'Full Name', 'Phone', 'Gender', 'Status', 'Programs', 'Actions'].map((col) => (
-               <div
-                 key={col}
-                 className="text-sm font-semibold"
-                 style={{
-                    color: colors.navyMain,
-                    textAlign: col === 'Programs' ? 'center' : 'left',}}>
-                  {col}
-                </div>
-              ))}
-            </div>
+            {/* Scrollable in both directions */}
+            <div className="flex-1 overflow-auto">
 
-            {/* Scrollable Rows */}
-            <div className="flex-1 overflow-y-auto">
+              {/* Fixed Header */}
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: colStyle,
+                  minWidth: '750px',
+                  backgroundColor: colors.pageBg,
+                  borderBottom: `1px solid #e2e8f0`,
+                  padding: '12px 16px',
+                  position: 'sticky',
+                  top: 0,
+                  zIndex: 5,
+                }}
+              >
+                {['NIC', 'Full Name', 'Phone', 'Gender', 'Status', 'Programs', 'Actions'].map((col) => (
+                  <div
+                    key={col}
+                    className="text-sm font-semibold"
+                    style={{
+                      color: colors.navyMain,
+                      textAlign: col === 'Programs' ? 'center' : 'left',
+                    }}
+                  >
+                    {col}
+                  </div>
+                ))}
+              </div>
+
+              {/* Rows */}
               {filtered.map((participant, index) => (
                 <div
                   key={participant.id}
                   style={{
                     display: 'grid',
                     gridTemplateColumns: colStyle,
+                    minWidth: '750px',
                     padding: '12px 16px',
                     borderBottom: index < filtered.length - 1 ? `1px solid #e2e8f0` : 'none',
                     alignItems: 'center',
@@ -342,7 +352,7 @@ export default function Participants() {
                       {participant.status}
                     </Badge>
                   </div>
-                  <div className="text-sm text-gray-600text-center">{participant.programs}</div>
+                  <div className="text-sm text-gray-600 text-center">{participant.programs}</div>
                   <div>
                     <button className="p-1 rounded hover:bg-gray-100">
                       <Pencil className="w-4 h-4" style={{ color: colors.idbGold }} />
@@ -350,6 +360,7 @@ export default function Participants() {
                   </div>
                 </div>
               ))}
+
             </div>
 
             {/* Pagination Footer */}
@@ -386,6 +397,7 @@ export default function Participants() {
                 </button>
               </div>
             </div>
+
           </div>
 
         </main>
