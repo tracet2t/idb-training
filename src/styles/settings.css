@@ -94,28 +94,35 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+  width: 100%;
 }
 
 /* Tabs Component Styling */
 .settings-tab-list {
   display: flex;
-  gap: 8px;
+  gap: 24px;
   background-color: transparent;
   border-bottom: 2px solid #e0e0e0;
   padding-bottom: 0;
+  padding-left: 0;
+  width: 100%;
+  justify-content: flex-start;
 }
 
 [role='tablist'] {
   display: flex;
-  gap: 8px;
+  gap: 24px;
   border-bottom: 2px solid #e0e0e0;
+  padding-left: 0;
+  width: 100%;
 }
 
 [role='tab'] {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px 16px;
+  gap: 12px;
+  padding: 16px 16px;
+  padding-bottom: 14px;
   background-color: transparent;
   border: none;
   border-bottom: 3px solid transparent;
@@ -124,17 +131,35 @@
   font-weight: 500;
   cursor: pointer;
   transition: all 0.3s ease;
+  position: relative;
+  white-space: nowrap;
+}
+
+[role='tab'] svg {
+  width: 20px;
+  height: 20px;
+  color: #64748b;
+  transition: color 0.3s ease;
+  flex-shrink: 0;
 }
 
 [role='tab']:hover {
-  color: #1a3a5c;
-  border-bottom-color: #d0d0d0;
+  color: #2d6a9f;
+  border-bottom-color: #dce6f0;
+}
+
+[role='tab']:hover svg {
+  color: #2d6a9f;
 }
 
 [role='tab'][aria-selected='true'] {
   color: #1a3a5c;
-  border-bottom-color: #C8960C;
-  background-color: transparent;
+  border-bottom: 3px solid #C8960C;
+  font-weight: 600;
+}
+
+[role='tab'][aria-selected='true'] svg {
+  color: #C8960C;
 }
 
 /* Card Component Styling */
@@ -183,6 +208,27 @@
   border-bottom: 2px solid #f0f4f8;
   background: linear-gradient(135deg, #f9f9f9 0%, #f0f4f8 100%);
   padding: 12px 16px;
+}
+
+/* Card Header with Icon Styling */
+.card-header-with-icon {
+  display: flex;
+  align-items: flex-start;
+  padding: 16px;
+  border-bottom: 2px solid #f0f4f8;
+  background: linear-gradient(135deg, #f9f9f9 0%, #f0f4f8 100%);
+}
+
+.card-title-wrapper {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.card-icon {
+  color: #1a3a5c;
+  flex-shrink: 0;
+  margin-top: 2px;
 }
 
 /* Input Component Styling */

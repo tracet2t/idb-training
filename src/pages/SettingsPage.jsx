@@ -85,9 +85,14 @@ export default function SettingsPage() {
           {/* Profile Tab */}
           <TabsContent value='profile'>
             <Card className='settings-card'>
-              <CardHeader>
-                <CardTitle>Profile Settings</CardTitle>
-             <CardDescription>Update your personal information</CardDescription>
+              <CardHeader className='card-header-with-icon'>
+                <div className='card-title-wrapper'>
+                  <User size={24} className='card-icon' />
+                  <div>
+                    <CardTitle>Profile Settings</CardTitle>
+                    <CardDescription>Update your personal information</CardDescription>
+                  </div>
+                </div>
               </CardHeader>
               <CardContent className='space-y-4'>
                 <div className='form-group'>
@@ -163,9 +168,14 @@ export default function SettingsPage() {
           {/* Notifications Tab */}
           <TabsContent value='notifications'>
             <Card className='settings-card'>
-              <CardHeader>
-                <CardTitle>Notification Settings</CardTitle>
-                <CardDescription>Choose how you want to be notified</CardDescription>
+              <CardHeader className='card-header-with-icon'>
+                <div className='card-title-wrapper'>
+                  <Bell size={24} className='card-icon' />
+                  <div>
+                    <CardTitle>Notification Settings</CardTitle>
+                    <CardDescription>Choose how you want to be notified</CardDescription>
+                  </div>
+                </div>
               </CardHeader>
               <CardContent className='space-y-4'>
                 <div className='toggle-item'>
@@ -223,9 +233,14 @@ export default function SettingsPage() {
           {/* Security Tab */}
           <TabsContent value='security'>
             <Card className='settings-card'>
-              <CardHeader>
-                <CardTitle>Security Settings</CardTitle>
-                <CardDescription>Keep your account secure</CardDescription>
+              <CardHeader className='card-header-with-icon'>
+                <div className='card-title-wrapper'>
+                  <Lock size={24} className='card-icon' />
+                  <div>
+                    <CardTitle>Security Settings</CardTitle>
+                    <CardDescription>Keep your account secure</CardDescription>
+                  </div>
+                </div>
               </CardHeader>
               <CardContent className='space-y-4'>
                 <div className='toggle-item'>
@@ -271,9 +286,14 @@ export default function SettingsPage() {
           {/* Privacy Tab */}
           <TabsContent value='privacy'>
             <Card className='settings-card'>
-              <CardHeader>
-                <CardTitle>Privacy Settings</CardTitle>
-                <CardDescription>Control your data and privacy</CardDescription>
+              <CardHeader className='card-header-with-icon'>
+                <div className='card-title-wrapper'>
+                  <Eye size={24} className='card-icon' />
+                  <div>
+                    <CardTitle>Privacy Settings</CardTitle>
+                    <CardDescription>Control your data and privacy</CardDescription>
+                  </div>
+                </div>
               </CardHeader>
               <CardContent className='space-y-4'>
                 <div className='toggle-item'>
