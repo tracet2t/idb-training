@@ -20,17 +20,7 @@ const colors = {
   cardBg: '#ffffff',
 };
 
-interface Program {
-  id: number;
-  name: string;
-  startDate: string;
-  endDate: string;
-  location: string;
-  status: "Ongoing" | "Completed" | "Upcoming";
-  enrolled: number;
-}
-
-const mockPrograms: Program[] = [
+const mockPrograms = [
   { id: 1, name: "SME Digital Literacy", startDate: "Apr 2", endDate: "Apr 17, 2026", location: "Colombo", status: "Ongoing", enrolled: 10 },
   { id: 2, name: "Export Readiness 2024", startDate: "Mar 3", endDate: "Apr 2, 2026", location: "Kandy", status: "Completed", enrolled: 10 },
   { id: 3, name: "Agri-Tech Innovations", startDate: "Apr 27", endDate: "May 12, 2026", location: "Anuradhapura", status: "Upcoming", enrolled: 10 },
@@ -39,7 +29,7 @@ const mockPrograms: Program[] = [
   { id: 6, name: "Tourism Service Excellence", startDate: "May 27", endDate: "Jun 11, 2026", location: "Matara", status: "Upcoming", enrolled: 10 },
 ];
 
-function getStatusStyle(status: string) {
+function getStatusStyle(status) {
   switch (status) {
     case "Ongoing": return { backgroundColor: '#dcfce7', color: '#16a34a' };
     case "Completed": return { backgroundColor: '#e0f2fe', color: '#0369a1' };
@@ -48,19 +38,13 @@ function getStatusStyle(status: string) {
   }
 }
 
-interface NavItemProps {
-  icon: React.ReactNode;
-  label: string;
-  active?: boolean;
-}
-
-function NavItem({ icon, label, active }: NavItemProps) {
+function NavItem({ icon, label, active }) {
   return (
     <div
       className="flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer transition-colors"
       style={active ? { backgroundColor: colors.idbRed, color: '#ffffff' } : { color: colors.navyPale }}
-      onMouseEnter={e => { if (!active) (e.currentTarget as HTMLDivElement).style.backgroundColor = 'rgba(176,212,241,0.1)'; }}
-      onMouseLeave={e => { if (!active) (e.currentTarget as HTMLDivElement).style.backgroundColor = 'transparent'; }}
+      onMouseEnter={e => { if (!active) e.currentTarget.style.backgroundColor = 'rgba(176,212,241,0.1)'; }}
+      onMouseLeave={e => { if (!active) e.currentTarget.style.backgroundColor = 'transparent'; }}
     >
       {icon}
       <span className="text-sm font-medium">{label}</span>
@@ -85,13 +69,10 @@ export default function Programs() {
   return (
     <div className="flex h-screen" style={{ backgroundColor: colors.pageBg }}>
 
-      {/* Sidebar */}
       <aside className="w-64 flex flex-col justify-between py-6 px-3" style={{ backgroundColor: colors.navyMain }}>
         <div>
           <div className="flex items-center gap-3 px-4 mb-8">
-            <div className="w-9 h-9 rounded-lg flex items-center justify-center text-white font-bold text-sm" style={{ backgroundColor: colors.idbRed }}>
-              IDB
-            </div>
+            <div className="w-9 h-9 rounded-lg flex items-center justify-center text-white font-bold text-sm" style={{ backgroundColor: colors.idbRed }}>IDB</div>
             <div>
               <p className="text-white font-semibold text-sm leading-tight">IDB Platform</p>
               <p className="text-xs" style={{ color: colors.navyPale }}>TRAINING & DEV</p>
@@ -121,10 +102,7 @@ export default function Programs() {
         </div>
       </aside>
 
-      {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
-
-        {/* Top Bar */}
         <header className="border-b px-6 py-3 flex items-center justify-between shadow-sm sticky top-0 z-10" style={{ backgroundColor: colors.cardBg, borderColor: '#e2e8f0' }}>
           <h1 className="participants-title" style={{ color: colors.navyMain }}>Programs</h1>
           <div className="flex items-center gap-3">
@@ -138,10 +116,7 @@ export default function Programs() {
           </div>
         </header>
 
-        {/* Page Body */}
         <main className="flex-1 overflow-hidden p-6 pt-4 flex flex-col gap-4">
-
-          {/* Title Row */}
           <div className="flex items-start justify-between">
             <div>
               <h2 className="text-2xl font-bold" style={{ color: colors.navyMain }}>Training Programs</h2>
@@ -153,16 +128,13 @@ export default function Programs() {
             </Button>
           </div>
 
-          {/* Filters */}
           <div className="rounded-xl border p-4 flex gap-3" style={{ backgroundColor: colors.cardBg, borderColor: '#e2e8f0' }}>
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <Input className="pl-9" placeholder="Search programs..." value={search} onChange={(e) => setSearch(e.target.value)} />
             </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-40">
-                <SelectValue placeholder="All Statuses" />
-              </SelectTrigger>
+              <SelectTrigger className="w-40"><SelectValue placeholder="All Statuses" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Statuses</SelectItem>
                 <SelectItem value="ongoing">Ongoing</SelectItem>
@@ -172,52 +144,20 @@ export default function Programs() {
             </Select>
           </div>
 
-          {/* Table Card */}
           <div className="rounded-xl border flex-1 flex flex-col overflow-hidden" style={{ backgroundColor: colors.cardBg, borderColor: '#e2e8f0' }}>
-
-            {/* Single scroll container for BOTH header and rows */}
             <div className="flex-1 overflow-auto">
-
-              {/* Header */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: colStyle,
-                minWidth: minTableWidth,
-                backgroundColor: colors.pageBg,
-                borderBottom: `1px solid #e2e8f0`,
-                padding: '12px 16px',
-                position: 'sticky',
-                top: 0,
-                zIndex: 5,
-              }}>
+              <div style={{ display: 'grid', gridTemplateColumns: colStyle, minWidth: minTableWidth, backgroundColor: colors.pageBg, borderBottom: '1px solid #e2e8f0', padding: '12px 16px', position: 'sticky', top: 0, zIndex: 5 }}>
                 {['Program Name', 'Dates', 'Location', 'Status', 'Enrolled', 'Actions'].map((col) => (
-                  <div key={col} className="text-sm font-semibold" style={{ color: colors.navyMain, textAlign: col === 'Enrolled' ? 'center' : 'left' }}>
-                    {col}
-                  </div>
+                  <div key={col} className="text-sm font-semibold" style={{ color: colors.navyMain, textAlign: col === 'Enrolled' ? 'center' : 'left' }}>{col}</div>
                 ))}
               </div>
-
-              {/* Rows */}
               {filtered.map((program, index) => (
-                <div
-                  key={program.id}
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: colStyle,
-                    minWidth: minTableWidth,
-                    padding: '12px 16px',
-                    borderBottom: index < filtered.length - 1 ? `1px solid #e2e8f0` : 'none',
-                    alignItems: 'center',
-                  }}
-                  className="hover:bg-gray-50 transition-colors"
-                >
+                <div key={program.id} style={{ display: 'grid', gridTemplateColumns: colStyle, minWidth: minTableWidth, padding: '12px 16px', borderBottom: index < filtered.length - 1 ? '1px solid #e2e8f0' : 'none', alignItems: 'center' }} className="hover:bg-gray-50 transition-colors">
                   <div className="text-sm font-medium" style={{ color: colors.navyMain }}>{program.name}</div>
                   <div className="text-sm text-gray-600">{program.startDate} - {program.endDate}</div>
                   <div className="text-sm text-gray-600">{program.location}</div>
                   <div>
-                    <Badge className="hover:opacity-90" style={getStatusStyle(program.status)}>
-                      {program.status}
-                    </Badge>
+                    <Badge className="hover:opacity-90" style={getStatusStyle(program.status)}>{program.status}</Badge>
                   </div>
                   <div className="text-sm text-gray-600 text-center">{program.enrolled}</div>
                   <div className="flex items-center gap-2">
@@ -230,10 +170,8 @@ export default function Programs() {
                   </div>
                 </div>
               ))}
-
             </div>
 
-            {/* Pagination Footer */}
             <div className="flex items-center justify-end gap-4 px-4 py-3 border-t shrink-0" style={{ backgroundColor: colors.cardBg, borderColor: '#e2e8f0' }}>
               <div className="flex items-center gap-2 text-sm text-gray-600">
                 <span>Rows per page:</span>
@@ -258,9 +196,7 @@ export default function Programs() {
                 </button>
               </div>
             </div>
-
           </div>
-
         </main>
       </div>
     </div>
