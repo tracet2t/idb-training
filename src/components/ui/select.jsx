@@ -1,4 +1,3 @@
-<<<<<<< HEAD:frontend/src/components/ui/select.jsx
 import * as React from "react"
 import * as SelectPrimitive from "@radix-ui/react-select"
 import { Check, ChevronDown, ChevronUp } from "lucide-react"
@@ -91,40 +90,16 @@ const SelectSeparator = React.forwardRef(({ className, ...props }, ref) => (
 ))
 SelectSeparator.displayName = SelectPrimitive.Separator.displayName
 
-export {
-  Select, SelectGroup, SelectValue, SelectTrigger, SelectScrollUpButton,
-  SelectScrollDownButton, SelectContent, SelectLabel, SelectItem, SelectSeparator,
-}
-=======
-export function Select({ value, onChange, children, ...props }) {
-  return (
-    <select
-      value={value}
-      onChange={onChange}
-      {...props}
-      style={{
-        width: '100%',
-        padding: '12px 16px',
-        border: '1px solid #dce6f0',
-        borderRadius: '6px',
-        fontSize: '14px',
-        fontFamily: 'Inter, sans-serif',
-        backgroundColor: 'white',
-        cursor: 'pointer',
-        transition: 'all 0.2s ease',
-        ...props.style,
-      }}
-    >
-      {children}
-    </select>
-  );
-}
-
-export function SelectOption({ value, children, ...props }) {
+function SelectOption({ value, children, ...props }) {
   return (
     <option value={value} {...props}>
       {children}
     </option>
   );
 }
->>>>>>> 388d4743d29f12411438b76735bca03679da6169:src/components/ui/select.jsx
+
+export {
+  Select, SelectGroup, SelectValue, SelectTrigger, SelectScrollUpButton,
+  SelectScrollDownButton, SelectContent, SelectLabel, SelectItem, SelectSeparator,
+  SelectOption,
+}
