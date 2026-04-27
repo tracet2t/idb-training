@@ -1,15 +1,12 @@
-import { useState } from "react";
-import { Search, Bell, LayoutDashboard, Users, BarChart2, BookOpen, Settings, LogOut, Plus, Eye, Trash2 } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { Search, Bell, Plus, Eye, Trash2, Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectOption } from "@/components/ui/select";
+import Sidebar from "../components/Sidebar";
+
+const BASE_URL = "http://localhost:3000/api";
 
 const colors = {
   navyMain: '#1a3a5c',
@@ -20,151 +17,161 @@ const colors = {
   cardBg: '#ffffff',
 };
 
-const mockPrograms = [
-  { id: 1, name: "SME Digital Literacy", startDate: "Apr 2", endDate: "Apr 17, 2026", location: "Colombo", status: "Ongoing", enrolled: 10 },
-  { id: 2, name: "Export Readiness 2024", startDate: "Mar 3", endDate: "Apr 2, 2026", location: "Kandy", status: "Completed", enrolled: 10 },
-  { id: 3, name: "Agri-Tech Innovations", startDate: "Apr 27", endDate: "May 12, 2026", location: "Anuradhapura", status: "Upcoming", enrolled: 10 },
-  { id: 4, name: "Women in Business Bootcamp", startDate: "Apr 7", endDate: "May 2, 2026", location: "Galle", status: "Ongoing", enrolled: 10 },
-  { id: 5, name: "Financial Management Mastery", startDate: "Jan 2", endDate: "Jan 22, 2026", location: "Colombo", status: "Completed", enrolled: 10 },
-  { id: 6, name: "Tourism Service Excellence", startDate: "May 27", endDate: "Jun 11, 2026", location: "Matara", status: "Upcoming", enrolled: 10 },
-];
-
 function getStatusStyle(status) {
-  switch (status) {
-    case "Ongoing": return { backgroundColor: '#dcfce7', color: '#16a34a' };
-    case "Completed": return { backgroundColor: '#e0f2fe', color: '#0369a1' };
-    case "Upcoming": return { backgroundColor: '#ede9fe', color: '#7c3aed' };
-    default: return {};
+  switch (status?.toLowerCase()) {
+    case "active":
+    case "ongoing":     return { backgroundColor: '#dcfce7', color: '#16a34a' };
+    case "completed":   return { backgroundColor: '#e0f2fe', color: '#0369a1' };
+    case "scheduled":
+    case "upcoming":    return { backgroundColor: '#ede9fe', color: '#7c3aed' };
+    case "cancelled":   return { backgroundColor: '#fee2e2', color: '#991b1b' };
+    default:            return { backgroundColor: '#f3f4f6', color: '#6b7280' };
   }
 }
 
-function NavItem({ icon, label, active }) {
-  return (
-    <div
-      className="flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer transition-colors"
-      style={active ? { backgroundColor: colors.idbRed, color: '#ffffff' } : { color: colors.navyPale }}
-      onMouseEnter={e => { if (!active) e.currentTarget.style.backgroundColor = 'rgba(176,212,241,0.1)'; }}
-      onMouseLeave={e => { if (!active) e.currentTarget.style.backgroundColor = 'transparent'; }}
-    >
-      {icon}
-      <span className="text-sm font-medium">{label}</span>
-    </div>
-  );
-}
+const colStyle = "2fr 180px 140px 120px 90px 90px";
 
 export default function Programs() {
+  const [programs, setPrograms] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [rowsPerPage, setRowsPerPage] = useState(100);
+  const [statusFilter, setStatusFilter] = useState("");
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [meta, setMeta] = useState({ total: 0, totalPages: 1 });
 
-  const colStyle = "2fr 200px 170px 130px 100px 100px";
-  const minTableWidth = "900px";
+  const handleLogout = () => { window.location.href = '/login'; };
 
-  const filtered = mockPrograms.filter((p) => {
-    const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase());
-    const matchesStatus = statusFilter === "all" || p.status.toLowerCase() === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
+  const fetchPrograms = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const params = new URLSearchParams({ page, limit });
+      if (search) params.append('search', search);
+      if (statusFilter) params.append('status', statusFilter);
+
+      const res = await fetch(`${BASE_URL}/programs?${params}`, {
+        credentials: 'include',
+      });
+      if (res.status === 401) { window.location.href = '/login'; return; }
+      if (!res.ok) throw new Error('Failed to load programs');
+      const json = await res.json();
+      setPrograms(json.data || []);
+      setMeta(json.meta || { total: 0, totalPages: 1 });
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [page, limit, search, statusFilter]);
+
+  useEffect(() => { fetchPrograms(); }, [fetchPrograms]);
+
+  // Debounce search
+  useEffect(() => {
+    const t = setTimeout(() => { setSearch(searchInput); setPage(1); }, 500);
+    return () => clearTimeout(t);
+  }, [searchInput]);
+
+  const startRecord = ((page - 1) * limit) + 1;
+  const endRecord = Math.min(page * limit, meta.total);
 
   return (
-    <div className="flex h-screen" style={{ backgroundColor: colors.pageBg }}>
+    <div className="dashboard-container">
+      <Sidebar handleLogout={handleLogout} />
 
-      <aside className="w-64 flex flex-col justify-between py-6 px-3" style={{ backgroundColor: colors.navyMain }}>
-        <div>
-          <div className="flex items-center gap-3 px-4 mb-8">
-            <div className="w-9 h-9 rounded-lg flex items-center justify-center text-white font-bold text-sm" style={{ backgroundColor: colors.idbRed }}>IDB</div>
-            <div>
-              <p className="text-white font-semibold text-sm leading-tight">IDB Platform</p>
-              <p className="text-xs" style={{ color: colors.navyPale }}>TRAINING & DEV</p>
-            </div>
+      <div className="main-content">
+        <header className="dashboard-header">
+          <div className="header-left">
+            <h1>PROGRAMS</h1>
+            <p className="header-subtitle">Manage all SME training initiatives and bootcamps.</p>
           </div>
-          <nav className="flex flex-col gap-1">
-            <NavItem icon={<LayoutDashboard className="w-4 h-4" />} label="Dashboard" />
-            <NavItem icon={<BookOpen className="w-4 h-4" />} label="Programs" active />
-            <NavItem icon={<Users className="w-4 h-4" />} label="Participants" />
-            <NavItem icon={<BarChart2 className="w-4 h-4" />} label="Analytics" />
-            <NavItem icon={<BookOpen className="w-4 h-4" />} label="Digital Diary" />
-            <NavItem icon={<Settings className="w-4 h-4" />} label="Settings" />
-          </nav>
-        </div>
-        <div className="px-4">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold" style={{ backgroundColor: colors.idbRed }}>I</div>
-            <div>
-              <p className="text-white text-sm font-medium">IDB Admin</p>
-              <p className="text-xs" style={{ color: colors.navyPale }}>Administrator</p>
-            </div>
-          </div>
-          <button className="flex items-center gap-2 text-sm transition-colors hover:text-white" style={{ color: colors.navyPale }}>
-            <LogOut className="w-4 h-4" />
-            Log Out
-          </button>
-        </div>
-      </aside>
-
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="border-b px-6 py-3 flex items-center justify-between shadow-sm sticky top-0 z-10" style={{ backgroundColor: colors.cardBg, borderColor: '#e2e8f0' }}>
-          <h1 className="participants-title" style={{ color: colors.navyMain }}>Programs</h1>
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <Input className="pl-9 w-64" placeholder="Search..." />
-            </div>
-            <button className="relative p-2 rounded-full hover:bg-gray-100">
-              <Bell className="w-5 h-5" style={{ color: colors.idbGold }} />
-            </button>
+          <div className="header-right">
+            <button className="icon-btn" title="Notifications"><Bell size={20} /></button>
+            <Button className="text-white gap-2 hover:opacity-90" style={{ backgroundColor: colors.idbRed }}>
+              <Plus className="w-4 h-4" /> Add Program
+            </Button>
           </div>
         </header>
 
-        <main className="flex-1 overflow-hidden p-6 pt-4 flex flex-col gap-4">
-          <div className="flex items-start justify-between">
-            <div>
-              <h2 className="text-2xl font-bold" style={{ color: colors.navyMain }}>Training Programs</h2>
-              <p className="text-gray-500 text-sm mt-1">Manage all SME training initiatives and bootcamps.</p>
-            </div>
-            <Button className="text-white gap-2 hover:opacity-90" style={{ backgroundColor: colors.idbRed }}>
-              <Plus className="w-4 h-4" />
-              Add Program
-            </Button>
-          </div>
+        <main style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px', flex: 1, overflow: 'hidden' }}>
 
-          <div className="rounded-xl border p-4 flex gap-3" style={{ backgroundColor: colors.cardBg, borderColor: '#e2e8f0' }}>
-            <div className="relative flex-1">
+          {/* Search & Filter Bar */}
+          <div className="rounded-xl border p-4 flex flex-wrap gap-3" style={{ backgroundColor: colors.cardBg, borderColor: '#e2e8f0' }}>
+            <div className="relative" style={{ flex: '1 1 220px' }}>
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <Input className="pl-9" placeholder="Search programs..." value={search} onChange={(e) => setSearch(e.target.value)} />
+              <Input
+                className="pl-9"
+                placeholder="Search programs..."
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+              />
             </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-40"><SelectValue placeholder="All Statuses" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="ongoing">Ongoing</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-                <SelectItem value="upcoming">Upcoming</SelectItem>
-              </SelectContent>
+            <Select value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }} style={{ flex: '0 1 160px' }}>
+              <SelectOption value="">All Statuses</SelectOption>
+              <SelectOption value="Scheduled">Scheduled</SelectOption>
+              <SelectOption value="Active">Active</SelectOption>
+              <SelectOption value="Completed">Completed</SelectOption>
+              <SelectOption value="Cancelled">Cancelled</SelectOption>
             </Select>
           </div>
 
+          {/* Table */}
           <div className="rounded-xl border flex-1 flex flex-col overflow-hidden" style={{ backgroundColor: colors.cardBg, borderColor: '#e2e8f0' }}>
             <div className="flex-1 overflow-auto">
-              <div style={{ display: 'grid', gridTemplateColumns: colStyle, minWidth: minTableWidth, backgroundColor: colors.pageBg, borderBottom: '1px solid #e2e8f0', padding: '12px 16px', position: 'sticky', top: 0, zIndex: 5 }}>
-                {['Program Name', 'Dates', 'Location', 'Status', 'Enrolled', 'Actions'].map((col) => (
-                  <div key={col} className="text-sm font-semibold" style={{ color: colors.navyMain, textAlign: col === 'Enrolled' ? 'center' : 'left' }}>{col}</div>
+
+              {/* Header Row */}
+              <div style={{ display: 'grid', gridTemplateColumns: colStyle, minWidth: '750px', backgroundColor: colors.pageBg, borderBottom: '1px solid #e2e8f0', padding: '12px 16px', position: 'sticky', top: 0, zIndex: 5 }}>
+                {['Program Name', 'District', 'Mode', 'Status', 'Capacity', 'Actions'].map((col) => (
+                  <div key={col} className="text-xs font-semibold uppercase tracking-wide" style={{ color: colors.navyMain, textAlign: col === 'Capacity' ? 'center' : 'left' }}>{col}</div>
                 ))}
               </div>
-              {filtered.map((program, index) => (
-                <div key={program.id} style={{ display: 'grid', gridTemplateColumns: colStyle, minWidth: minTableWidth, padding: '12px 16px', borderBottom: index < filtered.length - 1 ? '1px solid #e2e8f0' : 'none', alignItems: 'center' }} className="hover:bg-gray-50 transition-colors">
-                  <div className="text-sm font-medium" style={{ color: colors.navyMain }}>{program.name}</div>
-                  <div className="text-sm text-gray-600">{program.startDate} - {program.endDate}</div>
-                  <div className="text-sm text-gray-600">{program.location}</div>
+
+              {/* Loading */}
+              {loading && (
+                <div className="flex items-center justify-center py-16 gap-3">
+                  <Loader2 className="w-5 h-5 animate-spin" style={{ color: colors.idbRed }} />
+                  <span className="text-sm text-gray-500">Loading programs...</span>
+                </div>
+              )}
+
+              {/* Error */}
+              {!loading && error && (
+                <div className="flex items-center justify-center py-16 gap-2 text-red-500">
+                  <AlertCircle className="w-5 h-5" />
+                  <span className="text-sm">{error}</span>
+                </div>
+              )}
+
+              {/* Empty */}
+              {!loading && !error && programs.length === 0 && (
+                <div className="flex items-center justify-center py-16">
+                  <span className="text-gray-400 text-sm">No programs found.</span>
+                </div>
+              )}
+
+              {/* Rows */}
+              {!loading && !error && programs.map((program, index) => (
+                <div
+                  key={program.id}
+                  style={{ display: 'grid', gridTemplateColumns: colStyle, minWidth: '750px', padding: '12px 16px', borderBottom: index < programs.length - 1 ? '1px solid #e2e8f0' : 'none', alignItems: 'center' }}
+                  className="hover:bg-gray-50 transition-colors"
+                >
+                  <div className="text-sm font-medium truncate" style={{ color: colors.navyMain }}>{program.name}</div>
+                  <div className="text-sm text-gray-600">{program.district || program.province || '—'}</div>
+                  <div className="text-sm text-gray-600">{program.mode || '—'}</div>
                   <div>
-                    <Badge className="hover:opacity-90" style={getStatusStyle(program.status)}>{program.status}</Badge>
+                    <Badge style={getStatusStyle(program.status)}>{program.status}</Badge>
                   </div>
-                  <div className="text-sm text-gray-600 text-center">{program.enrolled}</div>
+                  <div className="text-sm text-gray-600 text-center">{program.capacity ?? '—'}</div>
                   <div className="flex items-center gap-2">
-                    <button className="p-1 rounded hover:bg-gray-100">
+                    <button className="p-1 rounded hover:bg-gray-100" title="View">
                       <Eye className="w-4 h-4" style={{ color: colors.idbGold }} />
                     </button>
-                    <button className="p-1 rounded hover:bg-red-50">
+                    <button className="p-1 rounded hover:bg-red-50" title="Delete">
                       <Trash2 className="w-4 h-4 text-gray-400 hover:text-red-500" />
                     </button>
                   </div>
@@ -172,28 +179,41 @@ export default function Programs() {
               ))}
             </div>
 
-            <div className="flex items-center justify-end gap-4 px-4 py-3 border-t shrink-0" style={{ backgroundColor: colors.cardBg, borderColor: '#e2e8f0' }}>
+            {/* Pagination */}
+            <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 border-t shrink-0" style={{ backgroundColor: colors.cardBg, borderColor: '#e2e8f0' }}>
               <div className="flex items-center gap-2 text-sm text-gray-600">
                 <span>Rows per page:</span>
-                <select className="border border-gray-300 rounded px-2 py-1 text-sm" value={rowsPerPage} onChange={(e) => setRowsPerPage(Number(e.target.value))}>
+                <select
+                  className="border border-gray-300 rounded px-2 py-1 text-sm"
+                  value={limit}
+                  onChange={(e) => { setLimit(Number(e.target.value)); setPage(1); }}
+                >
                   <option value={10}>10</option>
                   <option value={30}>30</option>
                   <option value={50}>50</option>
                   <option value={100}>100</option>
                 </select>
               </div>
-              <span className="text-sm text-gray-600">1–{filtered.length} of {filtered.length}</span>
-              <div className="flex items-center gap-1">
-                <button className="p-1 rounded hover:bg-gray-100 disabled:opacity-40" disabled>
-                  <svg className="w-5 h-5" style={{ color: colors.navyMain }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                  </svg>
-                </button>
-                <button className="p-1 rounded hover:bg-gray-100 disabled:opacity-40" disabled>
-                  <svg className="w-5 h-5" style={{ color: colors.navyMain }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
+
+              <div className="flex items-center gap-3">
+                <span className="text-sm text-gray-600">
+                  {meta.total === 0 ? '0 results' : `${startRecord}–${endRecord} of ${meta.total}`}
+                </span>
+                <div className="flex items-center gap-1">
+                  <button className="p-1.5 rounded hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed" disabled={page === 1} onClick={() => setPage(1)} title="First">
+                    <svg className="w-4 h-4" style={{ color: colors.navyMain }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7M18 19l-7-7 7-7" /></svg>
+                  </button>
+                  <button className="p-1.5 rounded hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed" disabled={page === 1} onClick={() => setPage(p => p - 1)} title="Previous">
+                    <svg className="w-4 h-4" style={{ color: colors.navyMain }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+                  </button>
+                  <span className="text-sm px-2 font-medium" style={{ color: colors.navyMain }}>{page} / {meta.totalPages || 1}</span>
+                  <button className="p-1.5 rounded hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed" disabled={page >= meta.totalPages} onClick={() => setPage(p => p + 1)} title="Next">
+                    <svg className="w-4 h-4" style={{ color: colors.navyMain }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                  </button>
+                  <button className="p-1.5 rounded hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed" disabled={page >= meta.totalPages} onClick={() => setPage(meta.totalPages)} title="Last">
+                    <svg className="w-4 h-4" style={{ color: colors.navyMain }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M6 5l7 7-7 7" /></svg>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
