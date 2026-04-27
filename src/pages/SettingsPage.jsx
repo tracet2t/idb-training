@@ -7,7 +7,7 @@ import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
-import { Select, SelectOption } from '../components/ui/select';
+import { SelectOption } from '../components/ui/select';
 import '../styles/settings.css';
 
 export default function SettingsPage() {
@@ -94,7 +94,7 @@ export default function SettingsPage() {
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className='space-y-4'>
+              <CardContent className='space-y-4 ' style={{ margin: '20px 200px' }}>
                 <div className='form-group'>
                   <Label htmlFor='fullName'>Full Name</Label>
                   <Input
@@ -143,19 +143,19 @@ export default function SettingsPage() {
                   />
                 </div>
 
-                <div className='form-group'>
+                <div className='form-group '>
                   <Label htmlFor='role'>Role</Label>
-                  <Select
+                  <select
                     id='role'
                     name='role'
                     value={settings.role}
                     onChange={handleInputChange}
                   >
-                    <SelectOption value='Administrator'>Administrator</SelectOption>
-                    <SelectOption value='Manager'>Manager</SelectOption>
-                    <SelectOption value='Staff'>Staff</SelectOption>
-                    <SelectOption value='Viewer'>Viewer</SelectOption>
-                  </Select>
+                    <option value='Administrator'>Administrator</option>
+                    <option value='Manager'>Manager</option>
+                    <option value='Staff'>Staff</option>
+                    <option value='Viewer'>Viewer</option>
+                  </select>
                 </div>
 
                 <Button onClick={handleSave} style={{ backgroundColor: colors.gold.main, color: '#000' }}>
