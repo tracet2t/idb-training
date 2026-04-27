@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Menu, X, LogOut } from 'lucide-react';
 import idbLogo from '../assets/idblogo.png';
 import '../styles/dashboard.css';
@@ -28,13 +28,13 @@ export default function Sidebar({ handleLogout }) {
         <a href='/dashboard' className={`nav-item ${currentPath === '/dashboard' ? 'active' : ''}`}>
           Dashboard
         </a>
-        <a href='#' className='nav-item'>
+        <a href='/programs' className={`nav-item ${currentPath === '/programs' ? 'active' : ''}`}>
           Programs
         </a>
-        <a href='#' className='nav-item'>
+        <a href='/participants' className={`nav-item ${currentPath === '/participants' ? 'active' : ''}`}>
           Participants
         </a>
-        <a href='#' className='nav-item'>
+        <a href='/analytics' className={`nav-item ${currentPath === '/analytics' ? 'active' : ''}`}>
           Analytics
         </a>
         <a href='/diary' className={`nav-item ${currentPath === '/diary' ? 'active' : ''}`}>
