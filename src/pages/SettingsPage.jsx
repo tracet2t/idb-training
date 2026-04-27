@@ -94,7 +94,7 @@ export default function SettingsPage() {
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className='space-y-4'>
+              <CardContent className='space-y-4 ' style={{ margin: '20px 200px' }}>
                 <div className='form-group'>
                   <Label htmlFor='fullName'>Full Name</Label>
                   <Input

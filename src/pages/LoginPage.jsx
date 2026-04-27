@@ -53,10 +53,10 @@ function PasswordInput({ value, onChange, placeholder, error }) {
   return (
     <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
       <Lock
-        size={12}
+        size={14}
         style={{
           position: 'absolute',
-          left: '12px',
+          left: '14px',
           color: '#C8960C',
           pointerEvents: 'none',
           flexShrink: 0
@@ -68,9 +68,9 @@ function PasswordInput({ value, onChange, placeholder, error }) {
         onChange={onChange}
         placeholder={placeholder}
         style={{
-          paddingLeft: '38px',
-          paddingRight: '38px',
-          height: '44px'
+          paddingLeft: '42px',
+          paddingRight: '42px',
+          height: '48px'
         }}
         className={error ? 'border-red-500 focus-visible:ring-red-500' : ''}
       />
@@ -79,19 +79,21 @@ function PasswordInput({ value, onChange, placeholder, error }) {
         onClick={() => setShow((p) => !p)}
         style={{
           position: 'absolute',
-          right: '12px',
+          right: '14px',
           background: 'none',
           border: 'none',
           cursor: 'pointer',
-          padding: '2px',
+          padding: '4px',
           display: 'flex',
           alignItems: 'center',
-          color: '#6B7280'
+          justifyContent: 'center',
+          color: '#6B7280',
+          transition: 'color 0.2s ease'
         }}
         onMouseEnter={(e) => e.currentTarget.style.color = '#374151'}
         onMouseLeave={(e) => e.currentTarget.style.color = '#6B7280'}
       >
-        {show ? <EyeOff size={12} /> : <Eye size={12} />}
+        {show ? <EyeOff size={14} /> : <Eye size={14} />}
       </button>
     </div>
   );
@@ -149,23 +151,24 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="relative flex items-center justify-center min-h-screen">
+    <div className="relative flex items-center justify-center min-h-screen px-4">
       <GeometricBackground />
       <Toaster position="top-center" richColors />
 
-      <Card className="relative z-10 w-full max-w-md border-0 shadow-2xl overflow-hidden rounded-lg">
+      <div className="w-full max-w-md" style={{ margin: '40px' }}>
+        <Card className="relative z-10 w-full border-0 shadow-2xl overflow-hidden rounded-lg mx-auto">
         {/* Light Blue Header Section */}
         <div
-          className="w-full px-6 py-4 flex items-center justify-center"
+          className="w-full  flex items-center justify-center"
           style={{ backgroundColor: '#B0D4F1' }}
         >
-          <img src={idbLogo} alt="IDB Logo" className="h-12 w-auto" />
+          <img src={idbLogo} alt="IDB Logo" className="h-16 w-auto" />
         </div>
 
         {/* White Body Section */}
-        <div className="bg-white">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-center text-2xl font-bold" style={{ color: '#1a3a5c' }}>
+        <div className="bg-white" style={{ padding: '40px' }}>
+          <CardHeader className="">
+            <CardTitle className="text-center text-3xl font-bold mb-2" style={{ color: '#1a3a5c' }}>
               Sign In
             </CardTitle>
             <CardDescription className="text-center text-sm text-gray-600">
@@ -173,19 +176,19 @@ export default function LoginPage() {
             </CardDescription>
           </CardHeader>
 
-          <CardContent>
-            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <CardContent className="mt-6 pb-8" style={{ margin: '20px 0px' }}>
+            <form onSubmit={handleSubmit} className="flex flex-col gap-5">
               {/* Email field */}
-              <div className="flex flex-col gap-1">
-                <Label htmlFor="email" className="text-xs font-semibold text-gray-700">
+              <div className="flex flex-col gap-2.5">
+                <Label htmlFor="email" className="text-xs font-semibold text-gray-700 ml-0.5">
                   Email Address <span style={{ color: '#8B1A1A' }}>*</span>
                 </Label>
                 <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
                   <User
-                    size={12}
+                    size={14}
                     style={{
                       position: 'absolute',
-                      left: '12px',
+                      left: '14px',
                       color: '#FFD700',
                       pointerEvents: 'none',
                       flexShrink: 0
@@ -197,18 +200,18 @@ export default function LoginPage() {
                     value={email}
                     onChange={(e) => { setEmail(e.target.value); setEmailError(''); }}
                     placeholder="yeshiiifashion@gmail.com"
-                    style={{ paddingLeft: '38px', height: '44px' }}
+                    style={{ paddingLeft: '42px', height: '48px' }}
                     className={emailError ? 'border-red-500 focus-visible:ring-red-500' : ''}
                   />
                 </div>
                 {emailError && (
-                  <p className="text-red-500 text-xs mt-0.5">{emailError}</p>
+                  <p className="text-red-500 text-xs mt-1.5 ml-0.5">{emailError}</p>
                 )}
               </div>
 
               {/* Password field */}
-              <div className="flex flex-col gap-1">
-                <Label htmlFor="password" className="text-xs font-semibold text-gray-700">
+              <div className="flex flex-col gap-2.5">
+                <Label htmlFor="password" className="text-xs font-semibold text-gray-700 ml-0.5">
                   Password <span style={{ color: '#8B1A1A' }}>*</span>
                 </Label>
                 <PasswordInput
@@ -218,12 +221,12 @@ export default function LoginPage() {
                   error={passwordError}
                 />
                 {passwordError && (
-                  <p className="text-red-500 text-xs mt-0.5">{passwordError}</p>
+                  <p className="text-red-500 text-xs mt-1.5 ml-0.5">{passwordError}</p>
                 )}
                 {/* Forgot password link - moved here */}
-                <div className="flex justify-end mt-2">
+                <div className="flex justify-end mt-3">
                   <span
-                    className="text-xs font-semibold cursor-pointer hover:underline"
+                    className="text-xs font-semibold cursor-pointer hover:underline transition-all"
                     style={{ color: '#FFB84D' }}
                   >
                     Forgot password?
@@ -235,17 +238,17 @@ export default function LoginPage() {
               <Button
                 type="submit"
                 disabled={loginMutation.isPending}
-                className="w-full text-white font-semibold mt-4"
+                className="w-full text-white font-semibold mt-8 transition-all duration-200"
                 style={{
                   backgroundColor: '#8B1A1A',
                   borderColor: '#8B1A1A',
-                  height: '36px',
+                  height: '44px',
                   fontSize: '14px'
                 }}
               >
                 {loginMutation.isPending ? (
-                  <span className="flex items-center gap-2">
-                    <Loader2 size={14} className="animate-spin" />
+                  <span className="flex items-center justify-center gap-2">
+                    <Loader2 size={16} className="animate-spin" />
                     Signing in...
                   </span>
                 ) : (
@@ -257,12 +260,13 @@ export default function LoginPage() {
         </div>
 
         {/* Footer Section */}
-        <div className="w-full px-6 py-3 text-center" style={{ backgroundColor: '#F9FAFB' }}>
-          <p className="text-xs text-gray-500">
+        <div className="w-full px-8 py-5 text-center border-t border-gray-100" style={{ backgroundColor: '#F9FAFB' }}>
+          <p className="text-xs text-gray-500 tracking-wide">
             Industrial Development Board of Ceylon © 2026
           </p>
         </div>
       </Card>
+      </div>
     </div>
   );
 }
