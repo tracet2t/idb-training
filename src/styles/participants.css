@@ -1,0 +1,702 @@
+/* ═══════════════════════════════════════════════════════════════════
+   participants.css — matches the diary.css separate-stylesheet pattern
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Tokens ─────────────────────────────────────────────────────── */
+:root {
+  --p-navy:     #1a3a5c;
+  --p-navy-mid: #2a5480;
+  --p-pale:     #e8f0f8;
+  --p-red:      #8B1A1A;
+  --p-red-hov:  #a01f1f;
+  --p-gold:     #C8960C;
+  --p-bg:       #f0f4f8;
+  --p-card:     #ffffff;
+  --p-border:   #e2e8f0;
+  --p-muted:    #64748b;
+}
+
+/* ── Layout ──────────────────────────────────────────────────────── */
+.participants-wrapper {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--p-bg);
+}
+
+.participants-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
+}
+
+/* ── Header ──────────────────────────────────────────────────────── */
+.participants-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 24px;
+  background: linear-gradient(135deg, var(--p-navy) 0%, var(--p-red) 100%);
+  flex-shrink: 0;
+}
+
+.participants-header-left h1 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0.06em;
+  margin: 0;
+}
+
+.participants-header-left p {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.72);
+  margin: 2px 0 0;
+}
+
+.participants-header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.participants-bell-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  cursor: pointer;
+  color: #ffffff !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.participants-bell-btn svg {
+  width: 18px !important;
+  height: 18px !important;
+  stroke: #ffffff !important;
+  color: #ffffff !important;
+  fill: none !important;
+  display: block;
+}
+
+.participants-bell-btn svg path,
+.participants-bell-btn svg polyline,
+.participants-bell-btn svg line,
+.participants-bell-btn svg circle {
+  stroke: #ffffff !important;
+}
+
+.participants-bell-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* ── Add Participant button ───────────────────────────────────────── */
+.participants-add-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 15px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  background: var(--p-red);
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
+}
+
+.participants-add-btn:hover {
+  background: var(--p-red-hov);
+  box-shadow: 0 2px 8px rgba(139, 26, 26, 0.28);
+}
+
+.participants-add-btn:active {
+  transform: scale(0.97);
+}
+
+/* ── Inner content area ───────────────────────────────────────────── */
+.participants-inner {
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* ── Filter / Search bar ──────────────────────────────────────────── */
+.participants-filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--p-card);
+  border: 1px solid var(--p-border);
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+/* Search input — grows but capped so selects don't get squeezed */
+.participants-search-wrap {
+  flex: 1 1 180px;
+  max-width: 400px;
+  position: relative;
+}
+
+.participants-search-wrap .search-icon {
+  position: absolute;
+  left: 11px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--p-muted);
+  pointer-events: none;
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+}
+
+.participants-search-input {
+  width: 100%;
+  border: 1px solid var(--p-border);
+  border-radius: 8px;
+  padding: 7px 34px 7px 36px;   /* left: 36px = 11px offset + 15px icon + 10px gap */
+  font-size: 13px;
+  color: #1e293b;
+  background: var(--p-card);
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.participants-search-input:focus {
+  border-color: var(--p-navy-mid);
+  box-shadow: 0 0 0 3px rgba(42, 84, 128, 0.12);
+}
+
+.participants-search-clear {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--p-muted);
+  display: flex;
+  align-items: center;
+  padding: 2px;
+  opacity: 0.7;
+  transition: opacity 0.15s;
+}
+
+.participants-search-clear:hover {
+  opacity: 1;
+}
+
+/* Status & District selects — fixed widths, never shrink */
+.participants-filter-select {
+  flex: 0 0 130px;
+  appearance: none;
+  border: 1px solid var(--p-border);
+  border-radius: 8px;
+  padding: 7px 28px 7px 10px;
+  font-size: 13px;
+  color: var(--p-muted);
+  background: var(--p-card);
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.15s;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+}
+
+.participants-district-select {
+  flex: 0 0 155px;
+  appearance: none;
+  border: 1px solid var(--p-border);
+  border-radius: 8px;
+  padding: 7px 28px 7px 10px;
+  font-size: 13px;
+  color: var(--p-muted);
+  background: var(--p-card);
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.15s;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+}
+
+.participants-filter-select:focus,
+.participants-district-select:focus {
+  border-color: var(--p-navy-mid);
+  outline: none;
+}
+
+/* Active filter highlight */
+.participants-filter-select.is-active,
+.participants-district-select.is-active {
+  border-color: var(--p-navy-mid);
+  background-color: var(--p-pale);
+  color: var(--p-navy);
+  font-weight: 500;
+}
+
+/* Active filter pills row */
+.participants-filter-pills {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--p-border);
+}
+
+.participants-filter-pills-label {
+  font-size: 11px;
+  color: var(--p-muted);
+  line-height: 24px;
+}
+
+.participants-filter-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: var(--p-pale);
+  color: var(--p-navy);
+}
+
+.participants-filter-pill button {
+  display: flex;
+  align-items: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--p-navy);
+  opacity: 0.6;
+  padding: 0;
+  margin-left: 2px;
+  transition: opacity 0.15s;
+}
+
+.participants-filter-pill button:hover {
+  opacity: 1;
+}
+
+.participants-clear-all {
+  font-size: 11px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--p-red);
+  text-decoration: underline;
+  padding: 0;
+}
+
+/* ── Table card ───────────────────────────────────────────────────── */
+.participants-table-card {
+  border: 1px solid var(--p-border);
+  border-radius: 10px;
+  background: var(--p-card);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.participants-table-scroll {
+  flex: 1;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ── Column grid — FIXED widths (Business Name reduced from 2fr→1.3fr) */
+.p-row {
+  display: grid;
+  grid-template-columns: 1.3fr 1.1fr 105px 120px 82px 105px 70px;
+  min-width: 740px;
+  align-items: center;
+  padding: 10px 16px;
+}
+
+/* Header row */
+.p-thead {
+  background: var(--p-bg);
+  border-bottom: 1px solid var(--p-border);
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
+.p-thead .p-row div {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--p-navy);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+/* Body rows */
+.p-tbody-row {
+  border-bottom: 1px solid var(--p-border);
+  transition: background 0.12s;
+}
+
+.p-tbody-row:last-child {
+  border-bottom: none;
+}
+
+.p-tbody-row:hover {
+  background: #f8fafc;
+}
+
+/* Cell text styles */
+.p-cell-main {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--p-navy);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.p-cell-sub {
+  font-size: 12px;
+  color: var(--p-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Status badges */
+.p-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 10px;
+  border-radius: 20px;
+  letter-spacing: 0.02em;
+  text-transform: capitalize;
+}
+
+.p-badge-active {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.p-badge-inactive {
+  background: #fee2e2;
+  color: #9B1A1A;
+}
+
+/* Action buttons */
+.p-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.p-action-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.12s;
+  padding: 0;
+}
+
+.p-action-btn-edit:hover  { background: #fffbeb; }
+.p-action-btn-delete:hover { background: #fef2f2; }
+
+/* Loading / Error / Empty states */
+.p-state-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 16px;
+  gap: 10px;
+}
+
+.p-state-center span {
+  font-size: 13px;
+  color: var(--p-muted);
+}
+
+.p-state-error {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #ef4444;
+}
+
+.p-retry-btn {
+  font-size: 13px;
+  padding: 5px 14px;
+  border-radius: 7px;
+  border: 1px solid var(--p-border);
+  background: var(--p-card);
+  color: var(--p-muted);
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.p-retry-btn:hover { background: #f8fafc; }
+
+.p-clear-filters-link {
+  font-size: 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--p-red);
+  text-decoration: underline;
+  margin-top: 2px;
+}
+
+/* ── Pagination bar — FIXED (no "Rows per\npage:" wrap) ───────────── */
+.participants-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 16px;
+  border-top: 1px solid var(--p-border);
+  background: var(--p-card);
+  flex-shrink: 0;
+}
+
+/* Left: "Rows per page:" + select — always on ONE line */
+.pag-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;          /* ← KEY FIX: prevents label from wrapping */
+  font-size: 13px;
+  color: var(--p-muted);
+}
+
+.pag-left select {
+  border: 1px solid var(--p-border);
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 13px;
+  color: var(--p-navy);
+  background: var(--p-card);
+  cursor: pointer;
+  outline: none;
+}
+
+/* Right: count + nav */
+.pag-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pag-result-count {
+  font-size: 13px;
+  color: var(--p-muted);
+  white-space: nowrap;
+}
+
+.pag-nav-btns {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+}
+
+.pag-nav-btn {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--p-navy);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.12s;
+}
+
+.pag-nav-btn:hover:not(:disabled) {
+  background: #f1f5f9;
+}
+
+.pag-nav-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.pag-page-indicator {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--p-navy);
+  padding: 0 6px;
+  white-space: nowrap;
+}
+
+/* ── Dialog / Modal internals ─────────────────────────────────────── */
+.p-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.p-form-grid .col-span-2 {
+  grid-column: span 2;
+}
+
+.p-field-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--p-navy);
+  margin-bottom: 4px;
+}
+
+.p-field-required {
+  color: var(--p-red);
+}
+
+.p-field-error {
+  font-size: 11px;
+  color: var(--p-red);
+  margin-top: 3px;
+}
+
+.p-alert-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 13px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+  color: var(--p-red);
+}
+
+.p-save-btn {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  background: var(--p-red);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background 0.15s, box-shadow 0.15s;
+  margin-top: 4px;
+}
+
+.p-save-btn:hover:not(:disabled) {
+  background: var(--p-red-hov);
+  box-shadow: 0 2px 8px rgba(139, 26, 26, 0.22);
+}
+
+.p-save-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ── Responsive ───────────────────────────────────────────────────── */
+
+/* Tablet: hide Sector column */
+@media (max-width: 900px) {
+  .p-row {
+    grid-template-columns: 1.3fr 1.1fr 105px 120px 82px 70px;
+    min-width: 620px;
+  }
+  .p-col-sector { display: none; }
+}
+
+/* Small tablet: also hide Phone */
+@media (max-width: 680px) {
+  .p-row {
+    grid-template-columns: 1.3fr 1.1fr 120px 82px 70px;
+    min-width: 460px;
+  }
+  .p-col-phone  { display: none; }
+  .p-col-sector { display: none; }
+}
+
+/* Mobile: filter bar stacks */
+@media (max-width: 600px) {
+  .participants-inner {
+    padding: 10px 12px;
+    gap: 10px;
+  }
+
+  .participants-search-wrap {
+    flex: 1 1 100%;
+    max-width: 100%;
+  }
+
+  .participants-filter-select,
+  .participants-district-select {
+    flex: 1 1 calc(50% - 5px);
+  }
+}
+
+/* Mobile: pagination stacks */
+@media (max-width: 480px) {
+  .participants-pagination {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .pag-right {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
+/* Mobile: header compact */
+@media (max-width: 480px) {
+  .participants-header {
+    padding: 10px 14px;
+  }
+
+  .participants-header-left h1 {
+    font-size: 15px;
+  }
+
+  .participants-add-btn span.add-label {
+    display: none; /* hide text, show only icon on very small screens */
+  }
+}
