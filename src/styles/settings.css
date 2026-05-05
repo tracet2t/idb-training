@@ -15,7 +15,7 @@
 .settings-header {
   background: linear-gradient(135deg, #0f2035 0%, #1a3a5c 50%, #8B1A1A 100%);
   border-bottom: 1px solid #dce6f0;
-  padding: 24px 32px;
+  padding: 10px 28px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -30,7 +30,7 @@
 
 .settings-header h1 {
   margin: 0;
-  font-size: 28px;
+  font-size: 18px;
   font-weight: 600;
   color: white;
 }
@@ -43,86 +43,83 @@
 .header-left h1 {
   margin: 0;
   color: white;
-  font-size: 28px;
+  font-size: 18px;
   font-weight: 600;
 }
 
 .header-subtitle {
   margin: 4px 0 0 0;
-  font-size: 14px;
+  font-size: 11px;
   color: rgba(255, 255, 255, 0.9);
 }
 
 .header-right {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 10px;
 }
 
 .back-to-dashboard {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 16px;
-  background-color: rgba(255, 255, 255, 0.1);
+  padding: 4px 8px;
+  background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 6px;
   text-decoration: none;
   color: white;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   transition: all 0.2s ease;
   cursor: pointer;
 }
 
 .back-to-dashboard:hover {
-  background-color: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.5);
   color: white;
 }
 
 .settings-content-wrapper {
   flex: 1;
   padding: 32px;
-  overflow-y: visible;
+  overflow-y: auto;
   max-width: 800px;
   margin: 0 auto;
   width: 100%;
 }
 
+.settings-content-wrapper.profile-no-scroll {
+  overflow: hidden;
+}
+
 .settings-tabs {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  width: 100%;
+  gap: 24px;
 }
 
 /* Tabs Component Styling */
 .settings-tab-list {
   display: flex;
-  gap: 24px;
+  gap: 8px;
   background-color: transparent;
   border-bottom: 2px solid #e0e0e0;
   padding-bottom: 0;
-  padding-left: 0;
-  width: 100%;
-  justify-content: flex-start;
 }
 
 [role='tablist'] {
   display: flex;
-  gap: 24px;
+  gap: 8px;
   border-bottom: 2px solid #e0e0e0;
-  padding-left: 0;
-  width: 100%;
 }
 
 [role='tab'] {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 16px 16px;
-  padding-bottom: 14px;
+  gap: 8px;
+  padding: 12px 16px;
   background-color: transparent;
   border: none;
   border-bottom: 3px solid transparent;
@@ -131,35 +128,17 @@
   font-weight: 500;
   cursor: pointer;
   transition: all 0.3s ease;
-  position: relative;
-  white-space: nowrap;
-}
-
-[role='tab'] svg {
-  width: 20px;
-  height: 20px;
-  color: #64748b;
-  transition: color 0.3s ease;
-  flex-shrink: 0;
 }
 
 [role='tab']:hover {
-  color: #2d6a9f;
-  border-bottom-color: #dce6f0;
-}
-
-[role='tab']:hover svg {
-  color: #2d6a9f;
+  color: #1a3a5c;
+  border-bottom-color: #d0d0d0;
 }
 
 [role='tab'][aria-selected='true'] {
   color: #1a3a5c;
-  border-bottom: 3px solid #C8960C;
-  font-weight: 600;
-}
-
-[role='tab'][aria-selected='true'] svg {
-  color: #C8960C;
+  border-bottom-color: #C8960C;
+  background-color: transparent;
 }
 
 /* Card Component Styling */
@@ -185,50 +164,80 @@
 }
 
 .settings-card [class*='CardTitle'] {
-  font-size: 16px;
-  font-weight: 600;
+  font-size: 20px;
+  font-weight: 700;
   color: #1a3a5c;
-  margin: 0 0 2px 0;
-  padding-bottom: 4px;
+  margin: 0 0 4px 0;
+  padding-bottom: 8px;
   border-bottom: 3px solid #C8960C;
   display: inline-block;
 }
 
 .settings-card [class*='CardDescription'] {
-  font-size: 13px;
+  font-size: 14px;
   color: #64748b;
-  margin: 4px 0 0 0;
+  margin: 8px 0 0 0;
 }
 
 .settings-card [class*='CardContent'] {
-  padding: 12px 16px 12px 24px;
+  padding: 20px 24px 20px 28px;
+}
+
+.profile-card-content {
+  padding: 18px 24px 20px;
+}
+
+.profile-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 18px;
+}
+
+.profile-full-width {
+  grid-column: 1 / -1;
+}
+
+.profile-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 18px;
+}
+
+.profile-actions button {
+  min-width: 160px;
+}
+
+.security-card-content {
+  padding: 24px 28px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.security-password-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px 20px;
+  margin-top: 16px;
+}
+
+.security-full-width {
+  grid-column: 1 / -1;
+}
+
+.security-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.security-actions button {
+  min-width: 170px;
 }
 
 .settings-card [class*='CardHeader'] {
   border-bottom: 2px solid #f0f4f8;
   background: linear-gradient(135deg, #f9f9f9 0%, #f0f4f8 100%);
-  padding: 12px 16px;
-}
-
-/* Card Header with Icon Styling */
-.card-header-with-icon {
-  display: flex;
-  align-items: flex-start;
   padding: 16px;
-  border-bottom: 2px solid #f0f4f8;
-  background: linear-gradient(135deg, #f9f9f9 0%, #f0f4f8 100%);
-}
-
-.card-title-wrapper {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-}
-
-.card-icon {
-  color: #1a3a5c;
-  flex-shrink: 0;
-  margin-top: 2px;
 }
 
 /* Input Component Styling */
@@ -237,14 +246,14 @@ input[type='email'],
 input[type='tel'],
 input[type='password'] {
   width: 100%;
-  padding: 12px 16px;
+  padding: 14px 14px 14px 16px;
   border: 1px solid #dce6f0;
   border-radius: 6px;
   font-size: 14px;
   font-family: 'Inter', sans-serif;
   transition: all 0.2s ease;
   background-color: white;
-  line-height: 1.5;
+  line-height: 1.4;
   box-sizing: border-box;
 }
 
@@ -265,65 +274,59 @@ input::placeholder {
   color: #999;
 }
 
-/* Select Component Styling */
-select {
-  width: 100%;
-  padding: 12px 16px;
-  border: 1px solid #dce6f0;
-  border-radius: 6px;
-  font-size: 14px;
-  font-family: 'Inter', sans-serif;
-  transition: all 0.2s ease;
-  background-color: white;
-  line-height: 1.5;
-  box-sizing: border-box;
-  cursor: pointer;
-}
-
-select:focus {
-  outline: none;
-  border-color: #1a3a5c;
-  box-shadow: 0 0 0 3px rgba(26, 58, 92, 0.1);
-}
-
-select:disabled {
-  background-color: #f5f5f5;
-  color: #999;
-  cursor: not-allowed;
-  border-color: #e0e0e0;
-}
-
-select option {
-  padding: 8px;
-}
-
 /* Label Component Styling */
 label {
   display: block;
   font-size: 14px;
   font-weight: 700;
   color: #1a3a5c;
-  margin-bottom: 10px;
-  margin-left: 0;
-  line-height: 1.5;
+  margin-bottom: 6px;
+  margin-left: 4px;
+  line-height: 1.4;
 }
 
 /* Form Group Styling */
 .form-group {
-  display: grid;
-  grid-template-columns:5fr 5fr;
-  gap: 12px;
-  margin-bottom: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
 }
 
 .form-group:last-child {
-  margin-bottom: 8px;
+  margin-bottom: 0;
 }
 
 .space-y-4 {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 16px;
+}
+
+@media (max-width: 768px) {
+  .profile-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-full-width {
+    grid-column: auto;
+  }
+
+  .profile-actions button {
+    width: auto;
+  }
+
+  .security-password-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .security-full-width {
+    grid-column: auto;
+  }
+
+  .security-actions button {
+    width: auto;
+  }
 }
 
 /* Button Component Styling */
@@ -332,7 +335,7 @@ button {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 8px 24px;
+  padding: 8px 12px;
   border-radius: 6px;
   font-size: 12px;
   font-weight: 600;
@@ -475,30 +478,28 @@ input:checked + .slider:before {
 .security-section {
   margin-top: 32px;
   padding-top: 32px;
-  padding-right: 32px;
-  padding-left: 48px;
-  border-top: 5px solid #e0e0e0;
+  padding-right: 20px;
+  border-top: 2px solid #e0e0e0;
 }
 
 .security-section h3 {
   font-size: 18px;
   font-weight: 700;
   color: #1a3a5c;
-  margin: 0 0 5px 0;
+  margin: 0 0 24px 0;
   padding-bottom: 12px;
-
-  padding-right: 5px;
+  padding-right: 24px;
   
   display: inline-block;
 }
 
-.security-section > div > div {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-bottom: 8px;
+.mt-4 {
+  margin-top: 16px;
 }
 
+.mt-4 div {
+  margin-bottom: 24px;
+}
 
 /* Privacy Section */
 .privacy-section {
@@ -587,11 +588,11 @@ input:checked + .slider:before {
   }
 
   .settings-header {
-    padding: 24px 16px;
+    padding: 10px 16px;
   }
 
   .settings-header h1 {
-    font-size: 24px;
+    font-size: 18px;
   }
 
   [role='tab'] {

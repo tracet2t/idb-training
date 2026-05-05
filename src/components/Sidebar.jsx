@@ -1,11 +1,13 @@
 import { useState } from 'react';
+import { NavLink } from 'react-router-dom';
 import { Menu, X, LogOut } from 'lucide-react';
 import idbLogo from '../assets/idblogo.png';
 import '../styles/dashboard.css';
 
 export default function Sidebar({ handleLogout }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [currentPath, setCurrentPath] = useState(window.location.pathname);
+
+  const navClassName = ({ isActive }) => `nav-item ${isActive ? 'active' : ''}`;
 
   return (
     <aside className={`sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
@@ -25,24 +27,24 @@ export default function Sidebar({ handleLogout }) {
       </div>
 
       <nav className='sidebar-nav'>
-        <a href='/dashboard' className={`nav-item ${currentPath === '/dashboard' ? 'active' : ''}`}>
+        <NavLink to='/dashboard' className={navClassName}>
           Dashboard
-        </a>
-        <a href='/programs' className={`nav-item ${currentPath === '/programs' ? 'active' : ''}`}>
+        </NavLink>
+        <NavLink to='/programs' className={navClassName}>
           Programs
-        </a>
-        <a href='/participants' className={`nav-item ${currentPath === '/participants' ? 'active' : ''}`}>
+        </NavLink>
+        <NavLink to='/participants' className={navClassName}>
           Participants
-        </a>
-        <a href='/analytics' className={`nav-item ${currentPath === '/analytics' ? 'active' : ''}`}>
+        </NavLink>
+        <NavLink to='/analytics' className={navClassName}>
           Analytics
-        </a>
-        <a href='/diary' className={`nav-item ${currentPath === '/diary' ? 'active' : ''}`}>
+        </NavLink>
+        <NavLink to='/diary' className={navClassName}>
           Digital Diary
-        </a>
-        <a href='/settings' className={`nav-item ${currentPath === '/settings' ? 'active' : ''}`}>
+        </NavLink>
+        <NavLink to='/settings' className={navClassName}>
           Settings
-        </a>
+        </NavLink>
       </nav>
 
       <div className='sidebar-footer'>

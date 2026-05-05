@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { Calendar, Plus, Edit, Trash2, X } from 'lucide-react';
 import { Calendar as RsuiteCalendar } from 'rsuite';
 import diaryService from '../../services/diaryService';
+import PhotoAttachments from './PhotoAttachments';
 import 'rsuite/Calendar/styles/index.css';
 
 export default function CalendarEvents({ userId }) {
@@ -11,6 +12,7 @@ export default function CalendarEvents({ userId }) {
   const [selectedDateEvents, setSelectedDateEvents] = useState([]);
   const [showEventForm, setShowEventForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  const [attachmentEventId, setAttachmentEventId] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const { register, handleSubmit, reset, watch } = useForm({
@@ -66,13 +68,33 @@ export default function CalendarEvents({ userId }) {
 
       if (editingId) {
         await diaryService.updateCalendarEvent(editingId, payload);
+        setAttachmentEventId(editingId);
       } else {
-        await diaryService.createCalendarEvent(payload);
+        const response = await diaryService.createCalendarEvent(payload);
+        console.log('Create event response:', response);
+        const createdId =
+          response?.data?.id ??
+          response?.data?.eventId ??
+          response?.data?.data?.id ??
+          response?.data?.data?.eventId ??
+          response?.id ??
+          response?.eventId;
+
+        if (createdId) {
+          setEditingId(createdId);
+          setAttachmentEventId(createdId);
+          console.log('Event created with ID:', createdId);
+        } else {
+          console.warn('Could not extract event ID from response:', response);
+        }
       }
 
-      reset();
-      setShowEventForm(false);
-      setEditingId(null);
+      reset({
+        title: '',
+        date: data.date,
+        time: data.time,
+        description: '',
+      });
       fetchCalendarEvents();
     } catch (error) {
       console.error('Error saving event:', error);
@@ -85,6 +107,7 @@ export default function CalendarEvents({ userId }) {
     const [date, time] = event.dateTime.split('T');
     const timeOnly = time?.substring(0, 5) || '';
     setEditingId(event.id);
+    setAttachmentEventId(event.id);
     reset({
       title: event.title,
       date,
@@ -108,6 +131,7 @@ export default function CalendarEvents({ userId }) {
   const handleCancel = () => {
     setShowEventForm(false);
     setEditingId(null);
+    setAttachmentEventId(null);
     reset();
   };
 
@@ -258,6 +282,17 @@ export default function CalendarEvents({ userId }) {
                   className='form-textarea'
                   rows='4'
                 />
+              </div>
+
+              <div className='event-attachments-panel'>
+                <div className='event-attachments-panel-header'>
+                  <h4>Photo Attachment</h4>
+                  <p>
+                    Backend stores attachments under the diary event, so this
+                    upload becomes active after the event exists.
+                  </p>
+                </div>
+                <PhotoAttachments eventId={attachmentEventId} />
               </div>
 
               <div className='form-actions'>

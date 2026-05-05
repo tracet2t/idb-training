@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Bell, Settings, LogOut, Menu, X, TrendingUp } from 'lucide-react';
 import { Line, Bar, Pie } from 'react-chartjs-2';
+import { useNavigate } from 'react-router-dom';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -48,10 +48,6 @@ export default function DashboardPage() {
     console.log('Logging out...');
   };
 
-  const handleSettings = () => {
-    navigate('/settings');
-  };
-
   return (
     <div className='dashboard-container'>
       <Sidebar handleLogout={handleLogout} />
@@ -67,10 +63,10 @@ export default function DashboardPage() {
 
           <div className='header-right'>
             <button className='icon-btn' title='Notifications'>
-              <Bell size={20} />
+              <Bell size={20} style={{ color: '#ffffff' }} />
             </button>
-            <button className='icon-btn' title='Settings' onClick={handleSettings}>
-              <Settings size={20} />
+            <button className='icon-btn' title='Settings' onClick={() => navigate('/settings')}>
+              <Settings size={20} style={{ color: '#ffffff' }} />
             </button>
 
             <div className='user-menu'>
