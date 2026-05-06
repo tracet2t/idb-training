@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback, useRef } from "react";
 import {
   Search, Bell, Plus, Pencil, Trash2, Loader2,
   AlertCircle, X, Building2, User, Mail, Phone,
-  MapPin, Briefcase, Hash,
+  MapPin, Briefcase, Hash, ChevronDown,   
 } from "lucide-react";
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { Input } from "@/components/ui/input";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
@@ -37,36 +37,83 @@ function validateForm(form, isEdit = false) {
   return errs;
 }
 
-// ── Reusable form field ───────────────────────────────────────────
-function Field({ label, required, icon: Icon, error, children }) {
+// ── Section header ────────────────────────────────────────────────
+function PSectionHeader({ icon: Icon, label }) {
   return (
-    <div>
-      <div className="p-field-label">
-        {Icon && <Icon size={13} style={{ opacity: 0.6 }} />}
-        {label}
-        {required && <span className="p-field-required">*</span>}
+    <div className="p-section-header">
+      <div className="p-section-icon"><Icon size={14} /></div>
+      <span>{label}</span>
+    </div>
+  );
+}
+
+// ── Dialog gradient header ────────────────────────────────────────
+function PDialogHeader({ badge, title, subtitle }) {
+  return (
+    <div className="p-dialog-header">
+      <div className="p-dialog-header-badge">
+        <span className="p-dialog-header-dot" />
+        {badge}
       </div>
+      <h2 className="p-dialog-title">{title}</h2>
+      <p className="p-dialog-subtitle">{subtitle}</p>
+      <div className="p-dialog-header-rule" />
+    </div>
+  );
+}
+
+// ── Field wrapper ─────────────────────────────────────────────────
+function PField({ label, required, error, children }) {
+  return (
+    <div className="p-new-field">
+      <label className="p-new-label">
+        {label}{required && <span className="p-field-required"> *</span>}
+      </label>
       {children}
       {error && <div className="p-field-error">{error}</div>}
     </div>
   );
 }
 
-// ── Styled select (used inside dialogs) ──────────────────────────
-function FormSelect({ name, value, onChange, placeholder, children }) {
+// ── Icon input ────────────────────────────────────────────────────
+function PIconInput({ icon: Icon, name, value, onChange, placeholder, type = "text", hasError }) {
   return (
-    <select
-      name={name}
-      value={value}
-      onChange={onChange}
-      className="participants-filter-select"
-      style={{ flex: "unset", width: "100%", padding: "8px 28px 8px 10px" }}
-    >
-      {placeholder && <option value="" disabled>{placeholder}</option>}
-      {children}
-    </select>
+    <div className={`p-icon-input${hasError ? " p-icon-input-error" : ""}`}>
+      <Icon size={15} className="p-icon-input-icon" />
+      <input
+        name={name} type={type} value={value} onChange={onChange}
+        placeholder={placeholder} className="p-icon-input-field"
+      />
+    </div>
   );
 }
+
+// ── Icon select ───────────────────────────────────────────────────
+function PIconSelect({ icon: Icon, name, value, onChange, children, hasError, placeholder }) {
+  return (
+    <div className={`p-icon-input${hasError ? " p-icon-input-error" : ""}`}>
+      <Icon size={15} className="p-icon-input-icon" />
+      <select name={name} value={value} onChange={onChange}
+        className="p-icon-input-field p-icon-select">
+        {placeholder && <option value="" disabled>{placeholder}</option>}
+        {children}
+      </select>
+      <ChevronDown size={13} className="p-select-chevron" />
+    </div>
+  );
+}
+
+// ── Step dots ─────────────────────────────────────────────────────
+function PStepDots({ total = 2, active = 0 }) {
+  return (
+    <div className="p-step-dots">
+      {Array.from({ length: total }).map((_, i) => (
+        <span key={i} className={`p-step-dot${i === active ? " p-step-dot-active" : ""}`} />
+      ))}
+    </div>
+  );
+}
+
 
 // ── Add Participant Dialog ────────────────────────────────────────
 function AddParticipantDialog({ onSuccess }) {
@@ -88,15 +135,9 @@ function AddParticipantDialog({ onSuccess }) {
     setError(""); setSaving(true);
     try {
       await createParticipant(form);
-      setOpen(false);
-      setForm(EMPTY_CREATE);
-      setFieldErrs({});
-      onSuccess?.();
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setSaving(false);
-    }
+      setOpen(false); setForm(EMPTY_CREATE); setFieldErrs({}); onSuccess?.();
+    } catch (err) { setError(err.message); }
+    finally { setSaving(false); }
   };
 
   const handleOpenChange = (v) => {
@@ -108,67 +149,81 @@ function AddParticipantDialog({ onSuccess }) {
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <button className="user-btn" onClick={() => setOpen(true)}>
-          <Plus size={15} />
-          Add Participant
+          <Plus size={15} /> Add Participant
         </button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-lg" style={{ maxHeight: "90vh", overflowY: "auto" }}>
-        <DialogHeader>
-          <DialogTitle style={{ color: "var(--p-navy)" }}>Add New Participant</DialogTitle>
-        </DialogHeader>
-        <div style={{ display: "flex", flexDirection: "column", gap: 14, paddingTop: 4 }}>
+      <DialogContent className="p-dialog-content">
+        <PDialogHeader
+          badge="PARTICIPANTS REGISTRY"
+          title="Add New Participant"
+          subtitle="Industrial Development Board of Ceylon — SME Directory"
+        />
+        <div className="p-dialog-body">
           {error && (
             <div className="p-alert-error">
               <AlertCircle size={15} style={{ flexShrink: 0, marginTop: 1 }} />
               <span>{error}</span>
             </div>
           )}
-          <div className="p-form-grid">
-            <div className="col-span-2">
-              <Field label="Business Name" required icon={Building2} error={fieldErrs.businessName}>
-                <Input name="businessName" placeholder="e.g. Perera Textiles Pvt Ltd"
-                  value={form.businessName} onChange={set}
-                  className={fieldErrs.businessName ? "border-red-400" : ""} />
-              </Field>
-            </div>
-            <div className="col-span-2">
-              <Field label="Owner Name" required icon={User} error={fieldErrs.ownerName}>
-                <Input name="ownerName" placeholder="Full name of owner"
-                  value={form.ownerName} onChange={set}
-                  className={fieldErrs.ownerName ? "border-red-400" : ""} />
-              </Field>
-            </div>
-            <Field label="Email" required icon={Mail} error={fieldErrs.email}>
-              <Input name="email" type="email" placeholder="email@business.lk"
-                value={form.email} onChange={set}
-                className={fieldErrs.email ? "border-red-400" : ""} />
-            </Field>
-            <Field label="Phone" required icon={Phone} error={fieldErrs.phone}>
-              <Input name="phone" placeholder="07XXXXXXXX"
-                value={form.phone} onChange={set}
-                className={fieldErrs.phone ? "border-red-400" : ""} />
-            </Field>
-            <Field label="District" required icon={MapPin} error={fieldErrs.district}>
-              <FormSelect name="district" value={form.district} onChange={set} placeholder="Select district">
-                {DISTRICTS.map(d => <option key={d} value={d}>{d.replace(/_/g, " ")}</option>)}
-              </FormSelect>
-            </Field>
-            <Field label="Sector" required icon={Briefcase} error={fieldErrs.sector}>
-              <Input name="sector" placeholder="e.g. Manufacturing"
-                value={form.sector} onChange={set}
-                className={fieldErrs.sector ? "border-red-400" : ""} />
-            </Field>
-            <div className="col-span-2">
-              <Field label="Registration Number" required icon={Hash} error={fieldErrs.registrationNumber}>
-                <Input name="registrationNumber" placeholder="e.g. PV00123456"
-                  value={form.registrationNumber} onChange={set}
-                  className={fieldErrs.registrationNumber ? "border-red-400" : ""} />
-              </Field>
-            </div>
+
+          <PSectionHeader icon={Building2} label="BUSINESS INFORMATION" />
+          <PField label="Business Name" required error={fieldErrs.businessName}>
+            <PIconInput icon={Building2} name="businessName" value={form.businessName}
+              onChange={set} placeholder="e.g. Perera Textiles Pvt Ltd"
+              hasError={!!fieldErrs.businessName} />
+          </PField>
+          <PField label="Owner Name" required error={fieldErrs.ownerName}>
+            <PIconInput icon={User} name="ownerName" value={form.ownerName}
+              onChange={set} placeholder="Full name of owner"
+              hasError={!!fieldErrs.ownerName} />
+          </PField>
+
+          <PSectionHeader icon={Mail} label="CONTACT DETAILS" />
+          <div className="p-form-grid-2">
+            <PField label="Email" required error={fieldErrs.email}>
+              <PIconInput icon={Mail} name="email" type="email" value={form.email}
+                onChange={set} placeholder="email@business.lk"
+                hasError={!!fieldErrs.email} />
+            </PField>
+            <PField label="Phone" required error={fieldErrs.phone}>
+              <PIconInput icon={Phone} name="phone" value={form.phone}
+                onChange={set} placeholder="07XXXXXXXX"
+                hasError={!!fieldErrs.phone} />
+            </PField>
           </div>
-          <button className="p-save-btn" onClick={handleSave} disabled={saving}>
-            {saving ? <><Loader2 size={15} className="animate-spin" /> Saving...</> : "Save Participant"}
-          </button>
+
+          <PSectionHeader icon={MapPin} label="LOCATION & SECTOR" />
+          <div className="p-form-grid-2">
+            <PField label="District" required error={fieldErrs.district}>
+              <PIconSelect icon={MapPin} name="district" value={form.district}
+                onChange={set} placeholder="Select district"
+                hasError={!!fieldErrs.district}>
+                {DISTRICTS.map(d => <option key={d} value={d}>{d.replace(/_/g, " ")}</option>)}
+              </PIconSelect>
+            </PField>
+            <PField label="Sector" required error={fieldErrs.sector}>
+              <PIconInput icon={Briefcase} name="sector" value={form.sector}
+                onChange={set} placeholder="e.g. Manufacturing"
+                hasError={!!fieldErrs.sector} />
+            </PField>
+          </div>
+
+          <PSectionHeader icon={Hash} label="REGISTRATION" />
+          <PField label="Registration Number" required error={fieldErrs.registrationNumber}>
+            <PIconInput icon={Hash} name="registrationNumber" value={form.registrationNumber}
+              onChange={set} placeholder="e.g. PV00123456"
+              hasError={!!fieldErrs.registrationNumber} />
+          </PField>
+        </div>
+
+        <div className="p-dialog-footer">
+          <PStepDots total={2} active={0} />
+          <div className="p-dialog-footer-actions">
+            <button className="p-cancel-btn" onClick={() => handleOpenChange(false)}>Cancel</button>
+            <button className="p-submit-btn" onClick={handleSave} disabled={saving}>
+              {saving ? <><Loader2 size={14} className="animate-spin" /> Saving...</> : "Save Participant"}
+            </button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
@@ -197,13 +252,9 @@ function EditParticipantDialog({ participant, onSuccess }) {
     setError(""); setSaving(true);
     try {
       await updateParticipant(participant.id, form);
-      setOpen(false);
-      onSuccess?.();
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setSaving(false);
-    }
+      setOpen(false); onSuccess?.();
+    } catch (err) { setError(err.message); }
+    finally { setSaving(false); }
   };
 
   return (
@@ -213,84 +264,98 @@ function EditParticipantDialog({ participant, onSuccess }) {
           <Pencil size={15} style={{ color: "var(--p-gold)" }} />
         </button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-lg" style={{ maxHeight: "90vh", overflowY: "auto" }}>
-        <DialogHeader>
-          <DialogTitle style={{ color: "var(--p-navy)" }}>Edit Participant</DialogTitle>
-        </DialogHeader>
-        <div style={{ display: "flex", flexDirection: "column", gap: 14, paddingTop: 4 }}>
+      <DialogContent className="p-dialog-content">
+        <PDialogHeader
+          badge="EDIT"
+          title="Edit Participant"
+          subtitle="Update participant details below"
+        />
+        <div className="p-dialog-body">
           {error && (
             <div className="p-alert-error">
               <AlertCircle size={15} style={{ flexShrink: 0, marginTop: 1 }} />
               <span>{error}</span>
             </div>
           )}
-          <div className="p-form-grid">
-            <div className="col-span-2">
-              <Field label="Business Name" required icon={Building2} error={fieldErrs.businessName}>
-                <Input name="businessName" value={form.businessName || ""} onChange={set}
-                  className={fieldErrs.businessName ? "border-red-400" : ""} />
-              </Field>
-            </div>
-            <div className="col-span-2">
-              <Field label="Owner Name" required icon={User} error={fieldErrs.ownerName}>
-                <Input name="ownerName" value={form.ownerName || ""} onChange={set}
-                  className={fieldErrs.ownerName ? "border-red-400" : ""} />
-              </Field>
-            </div>
-            <Field label="Email" required icon={Mail} error={fieldErrs.email}>
-              <Input name="email" value={form.email || ""} onChange={set}
-                className={fieldErrs.email ? "border-red-400" : ""} />
-            </Field>
-            <Field label="Phone" required icon={Phone} error={fieldErrs.phone}>
-              <Input name="phone" value={form.phone || ""} onChange={set}
-                className={fieldErrs.phone ? "border-red-400" : ""} />
-            </Field>
-            <Field label="District" required icon={MapPin} error={fieldErrs.district}>
-              <FormSelect name="district" value={form.district || ""} onChange={set}>
+
+          <PSectionHeader icon={Building2} label="BUSINESS INFORMATION" />
+          <PField label="Business Name" required error={fieldErrs.businessName}>
+            <PIconInput icon={Building2} name="businessName" value={form.businessName || ""}
+              onChange={set} placeholder="Business name" hasError={!!fieldErrs.businessName} />
+          </PField>
+          <PField label="Owner Name" required error={fieldErrs.ownerName}>
+            <PIconInput icon={User} name="ownerName" value={form.ownerName || ""}
+              onChange={set} placeholder="Owner name" hasError={!!fieldErrs.ownerName} />
+          </PField>
+
+          <PSectionHeader icon={Mail} label="CONTACT DETAILS" />
+          <div className="p-form-grid-2">
+            <PField label="Email" required error={fieldErrs.email}>
+              <PIconInput icon={Mail} name="email" type="email" value={form.email || ""}
+                onChange={set} placeholder="email@business.lk" hasError={!!fieldErrs.email} />
+            </PField>
+            <PField label="Phone" required error={fieldErrs.phone}>
+              <PIconInput icon={Phone} name="phone" value={form.phone || ""}
+                onChange={set} placeholder="07XXXXXXXX" hasError={!!fieldErrs.phone} />
+            </PField>
+          </div>
+
+          <PSectionHeader icon={MapPin} label="LOCATION & SECTOR" />
+          <div className="p-form-grid-2">
+            <PField label="District" required error={fieldErrs.district}>
+              <PIconSelect icon={MapPin} name="district" value={form.district || ""}
+                onChange={set} hasError={!!fieldErrs.district}>
                 {DISTRICTS.map(d => <option key={d} value={d}>{d.replace(/_/g, " ")}</option>)}
-              </FormSelect>
-            </Field>
-            <Field label="Status" required error={fieldErrs.status}>
-              <FormSelect name="status" value={form.status || ""} onChange={set}>
+              </PIconSelect>
+            </PField>
+            <PField label="Status" required error={fieldErrs.status}>
+              <PIconSelect icon={Hash} name="status" value={form.status || ""}
+                onChange={set} hasError={!!fieldErrs.status}>
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>
-              </FormSelect>
-            </Field>
-            <Field label="Sector" required icon={Briefcase} error={fieldErrs.sector}>
-              <Input name="sector" value={form.sector || ""} onChange={set}
-                className={fieldErrs.sector ? "border-red-400" : ""} />
-            </Field>
-            <Field label="Reg. Number" required icon={Hash} error={fieldErrs.registrationNumber}>
-              <Input name="registrationNumber" value={form.registrationNumber || ""} onChange={set}
-                className={fieldErrs.registrationNumber ? "border-red-400" : ""} />
-            </Field>
+              </PIconSelect>
+            </PField>
           </div>
-          <button className="p-save-btn" onClick={handleSave} disabled={saving}>
-            {saving ? <><Loader2 size={15} className="animate-spin" /> Saving...</> : "Save Changes"}
-          </button>
+          <div className="p-form-grid-2">
+            <PField label="Sector" required error={fieldErrs.sector}>
+              <PIconInput icon={Briefcase} name="sector" value={form.sector || ""}
+                onChange={set} placeholder="e.g. Manufacturing" hasError={!!fieldErrs.sector} />
+            </PField>
+            <PField label="Reg. Number" required error={fieldErrs.registrationNumber}>
+              <PIconInput icon={Hash} name="registrationNumber" value={form.registrationNumber || ""}
+                onChange={set} placeholder="e.g. PV00123456" hasError={!!fieldErrs.registrationNumber} />
+            </PField>
+          </div>
+        </div>
+
+        <div className="p-dialog-footer">
+          <PStepDots total={2} active={1} />
+          <div className="p-dialog-footer-actions">
+            <button className="p-cancel-btn" onClick={() => setOpen(false)}>Cancel</button>
+            <button className="p-submit-btn" onClick={handleSave} disabled={saving}>
+              {saving ? <><Loader2 size={14} className="animate-spin" /> Saving...</> : "Save Changes"}
+            </button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
   );
 }
 
+
 // ── Delete Confirm Dialog ─────────────────────────────────────────
 function DeleteConfirmDialog({ participant, onSuccess }) {
-  const [open, setOpen]  = useState(false);
-  const [busy, setBusy]  = useState(false);
+  const [open, setOpen]   = useState(false);
+  const [busy, setBusy]   = useState(false);
   const [error, setError] = useState("");
 
   const handleDelete = async () => {
     setBusy(true); setError("");
     try {
       await deleteParticipant(participant.id);
-      setOpen(false);
-      onSuccess?.();
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setBusy(false);
-    }
+      setOpen(false); onSuccess?.();
+    } catch (err) { setError(err.message); }
+    finally { setBusy(false); }
   };
 
   return (
@@ -300,48 +365,53 @@ function DeleteConfirmDialog({ participant, onSuccess }) {
           <Trash2 size={15} style={{ color: "#ef4444" }} />
         </button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-sm">
-        <DialogHeader>
-          <DialogTitle style={{ color: "var(--p-navy)" }}>Delete Participant?</DialogTitle>
-        </DialogHeader>
-        <div style={{ display: "flex", flexDirection: "column", gap: 14, paddingTop: 4 }}>
-          <p style={{ fontSize: 13, color: "var(--p-muted)", lineHeight: 1.6 }}>
-            This will permanently remove{" "}
-            <strong style={{ color: "#1e293b" }}>{participant.businessName}</strong>{" "}
-            and all associated enrollments. This cannot be undone.
-          </p>
+      <DialogContent className="p-dialog-content" style={{ maxWidth: 440, width: 440 }}>
+        <PDialogHeader
+          badge="DELETE"
+          title="Remove Participant"
+          subtitle="This action cannot be undone"
+        />
+        <div className="p-dialog-body" style={{ gap: 12 }}>
+          <div className="p-delete-warn">
+            <AlertCircle size={16} style={{ flexShrink: 0, marginTop: 1, color: "#dc2626" }} />
+            <p>
+              Permanently removing{" "}
+              <strong style={{ color: "#1e293b" }}>{participant.businessName}</strong>{" "}
+              and all associated enrollments.
+            </p>
+          </div>
+          <div className="p-form-grid-2" style={{ marginTop: 4 }}>
+            <div className="p-new-field">
+              <span className="p-detail-label">District</span>
+              <span style={{ fontSize: 13, color: "#1e293b", fontWeight: 500 }}>
+                {participant.district?.replace(/_/g, " ") || "—"}
+              </span>
+            </div>
+            <div className="p-new-field">
+              <span className="p-detail-label">Status</span>
+              <span className={`p-badge ${participant.status === "active" ? "p-badge-active" : "p-badge-inactive"}`}
+                style={{ marginTop: 2 }}>
+                {participant.status}
+              </span>
+            </div>
+          </div>
           {error && (
             <div className="p-alert-error">
               <AlertCircle size={15} style={{ flexShrink: 0 }} /> {error}
             </div>
           )}
-          <div style={{ display: "flex", gap: 10 }}>
-            <button
-              onClick={() => setOpen(false)}
-              style={{
-                flex: 1, padding: "8px", borderRadius: 8, border: "1px solid var(--p-border)",
-                background: "var(--p-card)", color: "var(--p-muted)", fontSize: 13,
-                cursor: "pointer", fontWeight: 500,
-              }}
-            >Cancel</button>
-            <button
-              onClick={handleDelete}
-              disabled={busy}
-              style={{
-                flex: 1, padding: "8px", borderRadius: 8, background: "#dc2626",
-                color: "#fff", fontSize: 13, fontWeight: 600, border: "none",
-                cursor: busy ? "not-allowed" : "pointer", opacity: busy ? 0.6 : 1,
-                display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-              }}
-            >
-              {busy ? <><Loader2 size={14} className="animate-spin" /> Deleting...</> : "Yes, Delete"}
-            </button>
-          </div>
+        </div>
+        <div className="p-dialog-footer">
+          <button className="p-cancel-btn" onClick={() => setOpen(false)}>Cancel</button>
+          <button className="p-delete-btn" onClick={handleDelete} disabled={busy}>
+            {busy ? <><Loader2 size={14} className="animate-spin" /> Deleting...</> : "Yes, delete"}
+          </button>
         </div>
       </DialogContent>
     </Dialog>
   );
 }
+
 
 // ── Main Page ─────────────────────────────────────────────────────
 export default function Participants() {
