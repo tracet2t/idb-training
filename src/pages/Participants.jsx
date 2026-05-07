@@ -112,11 +112,11 @@ function AddParticipantDialog({ onSuccess }) {
           Add Participant
         </button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-lg" style={{ maxHeight: "90vh", overflowY: "auto" }}>
-        <DialogHeader>
-          <DialogTitle style={{ color: "var(--p-navy)" }}>Add New Participant</DialogTitle>
+      <DialogContent className="sm:max-w-lg" style={{ maxHeight: "90vh", overflowY: "auto", padding: "28px" }}>
+        <DialogHeader style={{ marginBottom: "12px" }}>
+          <DialogTitle style={{ color: "var(--p-navy)", fontSize: "16px", fontWeight: "700" }}>Add New Participant</DialogTitle>
         </DialogHeader>
-        <div style={{ display: "flex", flexDirection: "column", gap: 14, paddingTop: 4 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           {error && (
             <div className="p-alert-error">
               <AlertCircle size={15} style={{ flexShrink: 0, marginTop: 1 }} />
@@ -213,11 +213,11 @@ function EditParticipantDialog({ participant, onSuccess }) {
           <Pencil size={15} style={{ color: "var(--p-gold)" }} />
         </button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-lg" style={{ maxHeight: "90vh", overflowY: "auto" }}>
-        <DialogHeader>
-          <DialogTitle style={{ color: "var(--p-navy)" }}>Edit Participant</DialogTitle>
+      <DialogContent className="sm:max-w-lg" style={{ maxHeight: "90vh", overflowY: "auto", padding: "28px" }}>
+        <DialogHeader style={{ marginBottom: "12px" }}>
+          <DialogTitle style={{ color: "var(--p-navy)", fontSize: "16px", fontWeight: "700" }}>Edit Participant</DialogTitle>
         </DialogHeader>
-        <div style={{ display: "flex", flexDirection: "column", gap: 14, paddingTop: 4 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           {error && (
             <div className="p-alert-error">
               <AlertCircle size={15} style={{ flexShrink: 0, marginTop: 1 }} />
@@ -300,11 +300,11 @@ function DeleteConfirmDialog({ participant, onSuccess }) {
           <Trash2 size={15} style={{ color: "#ef4444" }} />
         </button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-sm">
-        <DialogHeader>
-          <DialogTitle style={{ color: "var(--p-navy)" }}>Delete Participant?</DialogTitle>
+      <DialogContent className="sm:max-w-sm" style={{ padding: "28px" }}>
+        <DialogHeader style={{ marginBottom: "12px" }}>
+          <DialogTitle style={{ color: "var(--p-navy)", fontSize: "16px", fontWeight: "700" }}>Delete Participant?</DialogTitle>
         </DialogHeader>
-        <div style={{ display: "flex", flexDirection: "column", gap: 14, paddingTop: 4 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           <p style={{ fontSize: 13, color: "var(--p-muted)", lineHeight: 1.6 }}>
             This will permanently remove{" "}
             <strong style={{ color: "#1e293b" }}>{participant.businessName}</strong>{" "}
@@ -431,7 +431,7 @@ export default function Participants() {
               <Search
                 size={15}
                 style={{
-                  position:'absolute', left:11, top:'50%',
+                  position:'absolute', left:14, top:'50%',
                   transform:'translateY(-50%)',
                   color:'#64748b', pointerEvents:'none',
                   width:15, height:15, flexShrink:0,
