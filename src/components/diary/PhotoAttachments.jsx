@@ -2,22 +2,23 @@ import { useState, useEffect } from 'react';
 import { Upload, Trash2, X } from 'lucide-react';
 import diaryService from '../../services/diaryService';
 
-export default function PhotoAttachments({ userId, noteId }) {
+export default function PhotoAttachments({ eventId, noteId }) {
   const [photos, setPhotos] = useState([]);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState(null);
+  const attachmentId = eventId ?? noteId;
 
   useEffect(() => {
-    if (noteId) {
+    if (attachmentId) {
       fetchPhotos();
     }
-  }, [noteId]);
+  }, [attachmentId]);
 
   const fetchPhotos = async () => {
     try {
       setLoading(true);
-      const response = await diaryService.getPhotos(noteId);
+      const response = await diaryService.getPhotos(attachmentId);
       setPhotos(response.data || []);
     } catch (error) {
       console.error('Error fetching photos:', error);
@@ -39,11 +40,11 @@ export default function PhotoAttachments({ userId, noteId }) {
 
   const handleUpload = async (e) => {
     const file = e.target.files?.[0];
-    if (!file || !noteId) return;
+    if (!file || !attachmentId) return;
 
     try {
       setUploading(true);
-      await diaryService.uploadPhoto(file, noteId);
+      await diaryService.uploadPhoto(file, attachmentId);
       setPreviewUrl(null);
       fetchPhotos();
     } catch (error) {
@@ -56,7 +57,7 @@ export default function PhotoAttachments({ userId, noteId }) {
   const handleDelete = async (photoId) => {
     if (confirm('Delete this photo?')) {
       try {
-        await diaryService.deletePhoto(photoId);
+        await diaryService.deletePhoto(photoId, attachmentId);
         fetchPhotos();
       } catch (error) {
         console.error('Error deleting photo:', error);
@@ -64,11 +65,22 @@ export default function PhotoAttachments({ userId, noteId }) {
     }
   };
 
-  if (!noteId) {
+  if (!attachmentId) {
     return (
       <div className='photo-attachments-section'>
-        <h3>Photo Attachments</h3>
-        <p className='empty-message'>Select a field note to attach photos</p>
+        <div className='upload-area upload-area-disabled'>
+          <label className='upload-button upload-button-disabled'>
+            <Upload size={20} />
+            Attach PNG image
+            <input
+              type='file'
+              accept='image/png'
+              disabled
+              style={{ display: 'none' }}
+            />
+          </label>
+          <p className='upload-hint'>Save the event first to enable uploads.</p>
+        </div>
       </div>
     );
   }
@@ -82,15 +94,16 @@ export default function PhotoAttachments({ userId, noteId }) {
       <div className='upload-area'>
         <label className='upload-button'>
           <Upload size={20} />
-          {uploading ? 'Uploading...' : 'Click to upload photos'}
+          {uploading ? 'Uploading...' : 'Attach photo'}
           <input
             type='file'
-            accept='image/*'
+            accept='image/png'
             onChange={handleUpload}
             disabled={uploading}
             style={{ display: 'none' }}
           />
         </label>
+        <p className='upload-hint'>PNG only. One image per upload.</p>
       </div>
 
       {previewUrl && (
