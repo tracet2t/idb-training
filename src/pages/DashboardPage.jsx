@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Bell, Settings, LogOut, Menu, X, TrendingUp } from 'lucide-react';
 import { Line, Bar, Pie } from 'react-chartjs-2';
 import { useNavigate } from 'react-router-dom';
+import { logout } from '../services/authService';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -43,10 +44,25 @@ export default function DashboardPage() {
     { label: 'Success Rate', value: '94%', change: '+5%', color: 'navy' },
   ];
 
-  const handleLogout = () => {
-    // Add logout logic
+  const handleLogout = async () => {
+  try {
     console.log('Logging out...');
-  };
+
+    await logout();
+
+    localStorage.clear();
+    sessionStorage.clear();
+
+    navigate('/login');
+  } catch (error) {
+    console.error('Logout failed:', error);
+
+    localStorage.clear();
+    sessionStorage.clear();
+
+    navigate('/login');
+  }
+};
 
   return (
     <div className='dashboard-container'>
