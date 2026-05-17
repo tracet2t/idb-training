@@ -1,16 +1,14 @@
 import { useState } from 'react';
 import { BookOpen } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
-import FieldNotes from '../components/diary/FieldNotes';
-import ServiceReports from '../components/diary/ServiceReports';
 import CalendarEvents from '../components/diary/CalendarEvents';
 import '../styles/diary.css';
 
 export default function DiaryPage() {
-  const [activeTab, setActiveTab] = useState('field-notes');
+  const [activeTab, setActiveTab] = useState('calendar');
 
-  // Mock user ID for UI development (replace with actual auth later)
-  const userId = 'user-demo-123';
+  // Demo user ID (replace with actual auth later)
+  const userId = '000000000000';
 
   const handleLogout = () => {
     window.location.href = '/login';
@@ -31,39 +29,10 @@ export default function DiaryPage() {
           </div>
         </div>
 
-        <div className='diary-tabs'>
-          <button
-            className={`tab-button ${activeTab === 'field-notes' ? 'active' : ''}`}
-            onClick={() => setActiveTab('field-notes')}
-          >
-            Field Notes
-          </button>
-          <button
-            className={`tab-button ${activeTab === 'service-reports' ? 'active' : ''}`}
-            onClick={() => setActiveTab('service-reports')}
-          >
-            Service Reports
-          </button>
-          <button
-            className={`tab-button ${activeTab === 'calendar' ? 'active' : ''}`}
-            onClick={() => setActiveTab('calendar')}
-          >
-            Calendar & Events
-          </button>
-        </div>
+        {/* Removed diary-tabs and button for Calendar & Events */}
 
         <div className='diary-content'>
-          {activeTab === 'field-notes' && (
-            <FieldNotes userId={userId} />
-          )}
-          
-          {activeTab === 'service-reports' && (
-            <ServiceReports userId={userId} />
-          )}
-          
-          {activeTab === 'calendar' && (
-            <CalendarEvents userId={userId} />
-          )}
+          <CalendarEvents userId={userId} />
         </div>
       </main>
     </div>
