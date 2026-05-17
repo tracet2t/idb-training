@@ -1,26 +1,16 @@
 import axios from 'axios';
 
-import useAuthStore from '../store/authStore';
-
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL ?? 'http://localhost:3000',
   withCredentials: true,
 });
 
+// Do not redirect or clear auth on resource 401s — the session cookie may still
+// be valid (e.g. /auth/profile works but /users returns 401 for permissions).
+// Session expiry is handled on app load via getProfile() in App.jsx.
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      const url = error.config?.url ?? '';
-      if (!url.includes('/auth/login')) {
-        useAuthStore.getState().clearAuth();
-        if (window.location.pathname !== '/login') {
-          window.location.replace('/login');
-        }
-      }
-    }
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
 export default api;

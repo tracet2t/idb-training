@@ -3,11 +3,18 @@ import { useForm } from 'react-hook-form';
 import { Calendar, Plus, Edit, Trash2, X } from 'lucide-react';
 import { Calendar as RsuiteCalendar } from 'rsuite';
 import 'rsuite/Calendar/styles/index.css';
+import diaryService from '../../services/diaryService';
 
-const API_BASE_URL = 'http://localhost:3000/api';
-const DEFAULT_USER_ID = '000000000000'; // Demo user
+const unwrapList = (response) => {
+  const body = response?.data;
+  if (Array.isArray(body)) return body;
+  if (Array.isArray(body?.data)) return body.data;
+  return [];
+};
 
-export default function CalendarEvents({ userId = DEFAULT_USER_ID }) {
+const unwrapItem = (response) => response?.data?.data ?? response?.data;
+
+export default function CalendarEvents({ userId }) {
   const [events, setEvents] = useState([]);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedDateEvents, setSelectedDateEvents] = useState([]);
@@ -27,14 +34,10 @@ export default function CalendarEvents({ userId = DEFAULT_USER_ID }) {
     },
   });
 
-  const watchDate = watch('date');
-
-  // Fetch events from backend on component mount
   useEffect(() => {
-    fetchEvents();
+    if (userId) fetchEvents();
   }, [userId]);
 
-  // Update selected date events when date changes
   useEffect(() => {
     const dateString = selectedDate.toISOString().split('T')[0];
     const dateEvents = events.filter((e) => {
@@ -45,70 +48,54 @@ export default function CalendarEvents({ userId = DEFAULT_USER_ID }) {
   }, [selectedDate, events]);
 
   const fetchEvents = async () => {
+    if (!userId) return;
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch(`${API_BASE_URL}/diary-events/user/${userId}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch events');
-      }
-      const data = await response.json();
-      setEvents(data || []);
+      const response = await diaryService.getDiaryEventsByUser(userId);
+      setEvents(unwrapList(response));
     } catch (err) {
       console.error('Error fetching events:', err);
-      setError('Failed to load events');
+      setError(err.response?.data?.message || err.message || 'Failed to load events');
     } finally {
       setLoading(false);
     }
   };
 
   const onSubmit = async (data) => {
+    if (!userId) {
+      setError('User session not available. Please sign in again.');
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
 
-      // Format data for backend
       const payload = {
         title: data.title,
         description: data.description,
-        eventDate: `${data.date}T${data.time}:00Z`,
+        eventDate: data.date,
         eventTime: data.time,
         color: data.color || '#3B82F6',
-        createdById: userId
+        createdById: userId,
       };
 
-      let url = `${API_BASE_URL}/diary-events`;
-      let method = 'POST';
-
+      let savedEvent;
       if (editingId) {
-        // Update existing event
-        url += `/${editingId}`;
-        method = 'PUT';
-      }
-
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to save event');
-      }
-
-      const savedEvent = await response.json();
-      
-      if (editingId) {
-        setEvents((prev) =>
-          prev.map((ev) => (ev.id === editingId ? savedEvent : ev))
-        );
+        const current = events.find((ev) => ev.id === editingId);
+        const response = await diaryService.updateDiaryEvent(editingId, {
+          ...payload,
+          rowVersion: current?.rowVersion,
+        });
+        savedEvent = unwrapItem(response);
+        setEvents((prev) => prev.map((ev) => (ev.id === editingId ? savedEvent : ev)));
         setEditingId(null);
       } else {
+        const response = await diaryService.createDiaryEvent(payload);
+        savedEvent = unwrapItem(response);
         setEvents((prev) => [...prev, savedEvent]);
-        setOpenEventId(savedEvent.id);
+        setOpenEventId(savedEvent?.id);
       }
 
       setShowEventForm(false);
@@ -121,7 +108,7 @@ export default function CalendarEvents({ userId = DEFAULT_USER_ID }) {
       });
     } catch (err) {
       console.error('Error saving event:', err);
-      setError(err.message || 'Failed to save event');
+      setError(err.response?.data?.message || err.message || 'Failed to save event');
     } finally {
       setLoading(false);
     }
@@ -130,7 +117,7 @@ export default function CalendarEvents({ userId = DEFAULT_USER_ID }) {
   const handleEdit = (event) => {
     const eventDate = event.eventDate?.split('T')[0];
     const eventTime = event.eventTime || event.eventDate?.split('T')[1]?.substring(0, 5) || '';
-    
+
     setEditingId(event.id);
     reset({
       title: event.title,
@@ -143,26 +130,19 @@ export default function CalendarEvents({ userId = DEFAULT_USER_ID }) {
   };
 
   const handleDelete = async (id) => {
-    if (confirm('Delete this event?')) {
-      try {
-        setLoading(true);
-        setError(null);
-        const response = await fetch(`${API_BASE_URL}/diary-events/${id}`, {
-          method: 'DELETE',
-        });
+    if (!confirm('Delete this event?')) return;
 
-        if (!response.ok) {
-          throw new Error('Failed to delete event');
-        }
-
-        setEvents((prev) => prev.filter((ev) => ev.id !== id));
-        setOpenEventId(null);
-      } catch (err) {
-        console.error('Error deleting event:', err);
-        setError('Failed to delete event');
-      } finally {
-        setLoading(false);
-      }
+    try {
+      setLoading(true);
+      setError(null);
+      await diaryService.deleteDiaryEvent(id);
+      setEvents((prev) => prev.filter((ev) => ev.id !== id));
+      setOpenEventId(null);
+    } catch (err) {
+      console.error('Error deleting event:', err);
+      setError(err.response?.data?.message || err.message || 'Failed to delete event');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -176,7 +156,6 @@ export default function CalendarEvents({ userId = DEFAULT_USER_ID }) {
     setSelectedDate(date);
   };
 
-  // Function to render event indicators on calendar dates
   const renderEventIndicator = (date) => {
     const dateString = date.toISOString().split('T')[0];
     const dateEvents = events.filter((e) => {
@@ -415,7 +394,6 @@ function MockAttachmentUploader({ eventId, events, setEvents }) {
   const [fileUrl, setFileUrl] = useState('');
   const [uploading, setUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
-  const fileInputRef = useRef(null);
 
   const handleFileUpload = (e) => {
     const file = e.target.files?.[0];
@@ -445,7 +423,7 @@ function MockAttachmentUploader({ eventId, events, setEvents }) {
           )
         );
         setUploading(false);
-        e.target.value = ''; // Reset file input
+        e.target.value = '';
       }, 500);
     };
     reader.readAsDataURL(file);
@@ -504,8 +482,7 @@ function MockAttachmentUploader({ eventId, events, setEvents }) {
   return (
     <div style={{ marginTop: 16 }}>
       <h4 style={{ marginBottom: 16, fontSize: 16, fontWeight: 600 }}>Attachments (Images & PDFs)</h4>
-      
-      {/* Drag and Drop File Upload Section */}
+
       <div
         onDragEnter={handleDrag}
         onDragLeave={handleDrag}
@@ -561,7 +538,6 @@ function MockAttachmentUploader({ eventId, events, setEvents }) {
         </label>
       </div>
 
-      {/* URL Upload Section */}
       <div style={{ marginBottom: 20, padding: 16, backgroundColor: '#f9f9f9', borderRadius: 8, border: '1px solid #e0e0e0' }}>
         <h5 style={{ margin: '0 0 12px 0', fontSize: 14, fontWeight: 600, color: '#333' }}>
           Or add by URL:
@@ -610,15 +586,12 @@ function MockAttachmentUploader({ eventId, events, setEvents }) {
               whiteSpace: 'nowrap',
               transition: 'background-color 0.2s'
             }}
-            onMouseEnter={(e) => !uploading && (e.target.style.backgroundColor = '#218838')}
-            onMouseLeave={(e) => !uploading && (e.target.style.backgroundColor = '#28a745')}
           >
             {uploading ? 'Uploading...' : 'Add URL'}
           </button>
         </div>
       </div>
 
-      {/* Attachments List */}
       <div>
         <h5 style={{ margin: '0 0 12px 0', fontSize: 14, fontWeight: 600, color: '#333' }}>
           Attached Files ({event?.attachments?.length || 0}):
@@ -646,14 +619,6 @@ function MockAttachmentUploader({ eventId, events, setEvents }) {
                   link.download = att.name;
                   link.target = '_blank';
                   link.click();
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
-                  e.currentTarget.style.backgroundColor = '#f5f5f5';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.boxShadow = 'none';
-                  e.currentTarget.style.backgroundColor = '#fff';
                 }}
               >
                 {att.type === 'pdf' ? (

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import idbLogo from '../assets/idb-new-logo.webp';
 import { useMutation } from '@tanstack/react-query';
 import { login } from '../services/authService';
@@ -103,6 +103,7 @@ function PasswordInput({ value, onChange, placeholder, error }) {
 export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [emailError, setEmailError] = useState('');
@@ -115,7 +116,8 @@ export default function LoginPage() {
     onSuccess: (data) => {
       setAuth(data.user, data.user?.role);
       toast.success(data.message || 'Login successful!');
-      const from = location.state?.from?.pathname ?? '/dashboard';
+      const candidate = searchParams.get('redirect') || location.state?.from?.pathname || '/dashboard';
+      const from = candidate.startsWith('/') && !candidate.startsWith('//') ? candidate : '/dashboard';
       navigate(from, { replace: true });
     },
     onError: (err) => {

@@ -35,16 +35,11 @@ export default function Sidebar({ handleLogout }) {
         </NavLink>
         <NavLink to='/participants' className={navClassName}>
           Participants
-
-        </a>
-        <a href='/enrollments' className={`nav-item ${currentPath === '/enrollments' ? 'active' : ''}`}>
+        </NavLink>
+        <NavLink to='/enrollments' className={navClassName}>
           Enrollments
-        </a>
-        <a href='/analytics' className={`nav-item ${currentPath === '/analytics' ? 'active' : ''}`}>
-
         </NavLink>
         <NavLink to='/analytics' className={navClassName}>
-
           Analytics
         </NavLink>
         <NavLink to='/diary' className={navClassName}>

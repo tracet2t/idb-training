@@ -9,6 +9,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
 import Sidebar from "../components/Sidebar";
+import useAuthStore from "../store/authStore";
 import "../styles/programs.css";
 
 // ── Import all API calls and constants from programService ────────
@@ -34,7 +35,6 @@ const EMPTY_CREATE = {
   status: "upcoming",
   programType: "free",
   totalBudget: "",
-  createdById: "",
 };
 
 // ── Badge helper ──────────────────────────────────────────────────
@@ -77,7 +77,6 @@ function validateForm(form, isEdit = false) {
   const budget = form.totalBudget;
   if (budget === "" || budget === undefined || budget === null || isNaN(Number(budget)) || Number(budget) < 0)
                               errs.totalBudget = "Valid amount required";
-  if (!isEdit && !form.createdById?.trim()) errs.createdById = "Required";
   if (isEdit && !STATUSES.includes(form.status)) errs.status = "Select a status";
   return errs;
 }
@@ -414,6 +413,7 @@ function FilterDropdown({ value, onChange, options }) {
 
 // ── Add Program Dialog ────────────────────────────────────────────
 function AddProgramDialog({ onSuccess }) {
+  const user = useAuthStore((state) => state.user);
   const [open, setOpen]           = useState(false);
   const [saving, setSaving]       = useState(false);
   const [error, setError]         = useState("");
@@ -432,6 +432,13 @@ function AddProgramDialog({ onSuccess }) {
   };
 
   const handleSave = async () => {
+    const createdById = user?.sub?.trim();
+    if (!createdById) {
+      setError("Unable to determine your NIC. Please sign in again.");
+      document.querySelector(".pg-add-body")?.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+
     const errs = validateForm(form);
     if (Object.keys(errs).length) {
       setFieldErrs(errs);
@@ -440,7 +447,7 @@ function AddProgramDialog({ onSuccess }) {
     }
     setError(""); setSaving(true);
     try {
-      await createProgram(form);
+      await createProgram({ ...form, createdById });
       setOpen(false);
       setForm(EMPTY_CREATE);
       setFieldErrs({});
@@ -605,15 +612,13 @@ function AddProgramDialog({ onSuccess }) {
 
           <SectionHeader icon={Users} label="ADMINISTRATOR" />
 
-          <NewField label="Created By (NIC)" required error={fieldErrs.createdById}>
-            <IconInput
-              icon={Users}
-              name="createdById"
-              value={form.createdById}
-              onChange={set}
-              placeholder="e.g. 199512345678"
-              hasError={!!fieldErrs.createdById}
-            />
+          <NewField label="Created By (NIC)">
+            <div className="pg-icon-input pg-created-by-readonly">
+              <Users size={15} className="pg-icon-input-icon" />
+              <span className="pg-created-by-value">
+                {user?.sub ?? "—"}
+              </span>
+            </div>
           </NewField>
 
           <NewField label="Description" error={fieldErrs.description}>

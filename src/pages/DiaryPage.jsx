@@ -1,14 +1,11 @@
-import { useState } from 'react';
 import { BookOpen } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import CalendarEvents from '../components/diary/CalendarEvents';
+import useAuthStore from '../store/authStore';
 import '../styles/diary.css';
 
 export default function DiaryPage() {
-  const [activeTab, setActiveTab] = useState('calendar');
-
-  // Demo user ID (replace with actual auth later)
-  const userId = '000000000000';
+  const userId = useAuthStore((state) => state.user?.sub);
 
   const handleLogout = () => {
     window.location.href = '/login';
@@ -32,7 +29,13 @@ export default function DiaryPage() {
         {/* Removed diary-tabs and button for Calendar & Events */}
 
         <div className='diary-content'>
-          <CalendarEvents userId={userId} />
+          {userId ? (
+            <CalendarEvents userId={userId} />
+          ) : (
+            <p style={{ padding: '1rem', color: '#64748b' }}>
+              Unable to load diary — user session not available.
+            </p>
+          )}
         </div>
       </main>
     </div>

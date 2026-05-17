@@ -1,8 +1,8 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import {
   Search, Bell, Plus, Eye, Pencil, Trash2, Loader2,
   AlertCircle, X, Users, Hash, Tag, Calendar, DollarSign,
-  ChevronDown, ClipboardList,
+  ChevronDown, ClipboardList, BookOpen,
 } from "lucide-react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
@@ -19,6 +19,8 @@ import {
   deleteEnrollment,
   COMPLETION_STATUSES,
 } from "../services/programEnrollmentsService";
+import { getPrograms } from "../services/programsService";
+import { fetchParticipants } from "../services/participantsService";
 
 // ── Constants ─────────────────────────────────────────────────────
 const EMPTY_CREATE = {
@@ -27,6 +29,17 @@ const EMPTY_CREATE = {
   completionStatus: "enrolled",
   ticketPrice: "",
 };
+
+function formatParticipantLabel(p) {
+  if (p.businessName && p.ownerName) return `${p.businessName} — ${p.ownerName}`;
+  return p.businessName || p.ownerName || `Participant #${p.id}`;
+}
+
+function lookupName(map, id) {
+  if (id === null || id === undefined || id === "") return "—";
+  if (!map) return `#${id}`;
+  return map[id] ?? map[String(id)] ?? `#${id}`;
+}
 
 // ── Badge helper ──────────────────────────────────────────────────
 function getBadgeClass(status) {
@@ -42,10 +55,8 @@ function getBadgeClass(status) {
 function validateForm(form, isEdit = false) {
   const errs = {};
   if (!isEdit) {
-    if (!form.programId || isNaN(Number(form.programId)) || Number(form.programId) <= 0)
-      errs.programId = "Valid Program ID required";
-    if (!form.participantId || isNaN(Number(form.participantId)) || Number(form.participantId) <= 0)
-      errs.participantId = "Valid Participant ID required";
+    if (!form.programId) errs.programId = "Select a program";
+    if (!form.participantId) errs.participantId = "Select a participant";
   }
   if (!COMPLETION_STATUSES.includes(form.completionStatus))
     errs.completionStatus = "Select a status";
@@ -268,7 +279,12 @@ function StepDots({ total = 2, active = 0 }) {
 }
 
 // ── Add Enrollment Dialog ─────────────────────────────────────────
-function AddEnrollmentDialog({ onSuccess }) {
+function AddEnrollmentDialog({
+  onSuccess,
+  programOptions = [],
+  participantOptions = [],
+  optionsLoading = false,
+}) {
   const [open, setOpen]           = useState(false);
   const [saving, setSaving]       = useState(false);
   const [error, setError]         = useState("");
@@ -349,26 +365,30 @@ function AddEnrollmentDialog({ onSuccess }) {
           <SectionHeader icon={ClipboardList} label="ENROLLMENT DETAILS" />
 
           <div className="en-add-grid-2">
-            <NewField label="Program ID" required error={fieldErrs.programId}>
-              <IconInput
-                icon={Hash}
-                name="programId"
-                type="number"
+            <NewField label="Program" required error={fieldErrs.programId}>
+              <CustomDropdown
+                icon={BookOpen}
                 value={form.programId}
-                onChange={set}
-                placeholder="e.g. 1"
+                onChange={(v) => {
+                  setForm((f) => ({ ...f, programId: v }));
+                  setFieldErrs((f) => ({ ...f, programId: undefined }));
+                }}
+                options={programOptions}
+                placeholder={optionsLoading ? "Loading programs..." : "Select program"}
                 hasError={!!fieldErrs.programId}
               />
             </NewField>
 
-            <NewField label="Participant ID" required error={fieldErrs.participantId}>
-              <IconInput
+            <NewField label="Participant" required error={fieldErrs.participantId}>
+              <CustomDropdown
                 icon={Users}
-                name="participantId"
-                type="number"
                 value={form.participantId}
-                onChange={set}
-                placeholder="e.g. 5"
+                onChange={(v) => {
+                  setForm((f) => ({ ...f, participantId: v }));
+                  setFieldErrs((f) => ({ ...f, participantId: undefined }));
+                }}
+                options={participantOptions}
+                placeholder={optionsLoading ? "Loading participants..." : "Select participant"}
                 hasError={!!fieldErrs.participantId}
               />
             </NewField>
@@ -425,7 +445,7 @@ function AddEnrollmentDialog({ onSuccess }) {
 }
 
 // ── View Enrollment Dialog ────────────────────────────────────────
-function ViewEnrollmentDialog({ enrollment }) {
+function ViewEnrollmentDialog({ enrollment, programById, participantById }) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -459,12 +479,12 @@ function ViewEnrollmentDialog({ enrollment }) {
           <div className="en-view-divider" />
           <div className="en-view-grid">
             <div className="en-view-row">
-              <span className="en-detail-label">Program ID</span>
-              <span className="en-detail-value">#{enrollment.programId}</span>
+              <span className="en-detail-label">Program</span>
+              <span className="en-detail-value">{lookupName(programById, enrollment.programId)}</span>
             </div>
             <div className="en-view-row">
-              <span className="en-detail-label">Participant ID</span>
-              <span className="en-detail-value">#{enrollment.participantId}</span>
+              <span className="en-detail-label">Participant</span>
+              <span className="en-detail-value">{lookupName(participantById, enrollment.participantId)}</span>
             </div>
           </div>
           <div className="en-view-divider" />
@@ -604,7 +624,7 @@ function EditEnrollmentDialog({ enrollment, onSuccess }) {
 }
 
 // ── Delete Confirm Dialog ─────────────────────────────────────────
-function DeleteConfirmDialog({ enrollment, onSuccess }) {
+function DeleteConfirmDialog({ enrollment, onSuccess, programById, participantById }) {
   const [open, setOpen]   = useState(false);
   const [busy, setBusy]   = useState(false);
   const [error, setError] = useState("");
@@ -647,7 +667,7 @@ function DeleteConfirmDialog({ enrollment, onSuccess }) {
             <p>
               Permanently removing enrollment{" "}
               <strong style={{ color: "#1e293b" }}>#{enrollment.id}</strong>{" "}
-              (Program #{enrollment.programId} / Participant #{enrollment.participantId}).
+              ({lookupName(programById, enrollment.programId)} / {lookupName(participantById, enrollment.participantId)}).
             </p>
           </div>
           <div className="en-view-grid" style={{ marginTop: 4 }}>
@@ -690,8 +710,62 @@ export default function ProgramEnrollments() {
   const [page, setPage]                       = useState(1);
   const [limit, setLimit]                     = useState(10);
   const [meta, setMeta]                       = useState({ total: 0, totalPages: 1 });
+  const [programs, setPrograms]               = useState([]);
+  const [participants, setParticipants]       = useState([]);
+  const [optionsLoading, setOptionsLoading]   = useState(true);
 
   const handleLogout = () => { window.location.href = "/login"; };
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setOptionsLoading(true);
+      try {
+        const [programsJson, participantsResult] = await Promise.all([
+          getPrograms({ page: 1, limit: 500 }),
+          fetchParticipants({ page: 1, limit: 500 }),
+        ]);
+        if (cancelled) return;
+        setPrograms(programsJson.data || []);
+        setParticipants(participantsResult.data || []);
+      } catch (err) {
+        console.error("Failed to load program/participant options:", err);
+      } finally {
+        if (!cancelled) setOptionsLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  const programById = useMemo(() => {
+    const map = {};
+    for (const p of programs) {
+      const label = p.title || `Program #${p.id}`;
+      map[p.id] = label;
+      map[String(p.id)] = label;
+    }
+    return map;
+  }, [programs]);
+
+  const participantById = useMemo(() => {
+    const map = {};
+    for (const p of participants) {
+      const label = formatParticipantLabel(p);
+      map[p.id] = label;
+      map[String(p.id)] = label;
+    }
+    return map;
+  }, [participants]);
+
+  const programOptions = useMemo(
+    () => programs.map((p) => ({ value: String(p.id), label: programById[p.id] })),
+    [programs, programById]
+  );
+
+  const participantOptions = useMemo(
+    () => participants.map((p) => ({ value: String(p.id), label: participantById[p.id] })),
+    [participants, participantById]
+  );
 
   const load = useCallback(async () => {
     setLoading(true); setError("");
@@ -745,7 +819,12 @@ export default function ProgramEnrollments() {
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <button className="icon-btn" title="Notifications"><Bell size={20} /></button>
-            <AddEnrollmentDialog onSuccess={load} />
+            <AddEnrollmentDialog
+              onSuccess={load}
+              programOptions={programOptions}
+              participantOptions={participantOptions}
+              optionsLoading={optionsLoading}
+            />
           </div>
         </header>
 
@@ -784,8 +863,8 @@ export default function ProgramEnrollments() {
               <div className="en-thead">
                 <div className="en-row">
                   <div>ID</div>
-                  <div>Program ID</div>
-                  <div>Participant ID</div>
+                  <div>Program</div>
+                  <div>Participant</div>
                   <div>Status</div>
                   <div>Ticket Price</div>
                   <div>Enrollment Date</div>
@@ -827,8 +906,8 @@ export default function ProgramEnrollments() {
                 <div key={enr.id} className="en-tbody-row">
                   <div className="en-row">
                     <div className="en-cell-main">#{enr.id}</div>
-                    <div className="en-cell-sub">#{enr.programId}</div>
-                    <div className="en-cell-sub">#{enr.participantId}</div>
+                    <div className="en-cell-main">{lookupName(programById, enr.programId)}</div>
+                    <div className="en-cell-sub">{lookupName(participantById, enr.participantId)}</div>
                     <div>
                       <span className={getBadgeClass(enr.completionStatus)}>{enr.completionStatus}</span>
                     </div>
@@ -839,9 +918,9 @@ export default function ProgramEnrollments() {
                       {enr.enrollmentDate ? new Date(enr.enrollmentDate).toLocaleDateString() : "—"}
                     </div>
                     <div className="en-actions">
-                      <ViewEnrollmentDialog   enrollment={enr} />
+                      <ViewEnrollmentDialog enrollment={enr} programById={programById} participantById={participantById} />
                       <EditEnrollmentDialog   enrollment={enr} onSuccess={load} />
-                      <DeleteConfirmDialog    enrollment={enr} onSuccess={load} />
+                      <DeleteConfirmDialog enrollment={enr} onSuccess={load} programById={programById} participantById={participantById} />
                     </div>
                   </div>
                 </div>

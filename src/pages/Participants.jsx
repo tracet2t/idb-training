@@ -33,7 +33,7 @@ function validateForm(form, isEdit = false) {
   if (!form.district)                   errs.district     = "Select a district";
   if (!form.sector?.trim())             errs.sector       = "Required";
   if (!form.registrationNumber?.trim()) errs.registrationNumber = "Required";
-  if (isEdit && !STATUSES.includes(form.status)) errs.status = "Select a status";
+  if (isEdit && form.status && !STATUSES.includes(form.status)) errs.status = "Select a status";
   return errs;
 }
 
@@ -159,11 +159,6 @@ function AddParticipantDialog({ onSuccess }) {
           subtitle="Industrial Development Board of Ceylon — SME Directory"
         />
         <div className="p-dialog-body">
-      <DialogContent className="sm:max-w-lg" style={{ maxHeight: "90vh", overflowY: "auto", padding: "28px" }}>
-        <DialogHeader style={{ marginBottom: "12px" }}>
-          <DialogTitle style={{ color: "var(--p-navy)", fontSize: "16px", fontWeight: "700" }}>Add New Participant</DialogTitle>
-        </DialogHeader>
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           {error && (
             <div className="p-alert-error">
               <AlertCircle size={15} style={{ flexShrink: 0, marginTop: 1 }} />
@@ -276,11 +271,6 @@ function EditParticipantDialog({ participant, onSuccess }) {
           subtitle="Update participant details below"
         />
         <div className="p-dialog-body">
-      <DialogContent className="sm:max-w-lg" style={{ maxHeight: "90vh", overflowY: "auto", padding: "28px" }}>
-        <DialogHeader style={{ marginBottom: "12px" }}>
-          <DialogTitle style={{ color: "var(--p-navy)", fontSize: "16px", fontWeight: "700" }}>Edit Participant</DialogTitle>
-        </DialogHeader>
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           {error && (
             <div className="p-alert-error">
               <AlertCircle size={15} style={{ flexShrink: 0, marginTop: 1 }} />
@@ -318,13 +308,15 @@ function EditParticipantDialog({ participant, onSuccess }) {
                 {DISTRICTS.map(d => <option key={d} value={d}>{d.replace(/_/g, " ")}</option>)}
               </PIconSelect>
             </PField>
-            <PField label="Status" required error={fieldErrs.status}>
-              <PIconSelect icon={Hash} name="status" value={form.status || ""}
-                onChange={set} hasError={!!fieldErrs.status}>
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-              </PIconSelect>
-            </PField>
+            {form.status !== undefined && (
+              <PField label="Status" error={fieldErrs.status}>
+                <PIconSelect icon={Hash} name="status" value={form.status || ""}
+                  onChange={set} hasError={!!fieldErrs.status}>
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                </PIconSelect>
+              </PField>
+            )}
           </div>
           <div className="p-form-grid-2">
             <PField label="Sector" required error={fieldErrs.sector}>
@@ -405,16 +397,6 @@ function DeleteConfirmDialog({ participant, onSuccess }) {
               </span>
             </div>
           </div>
-      <DialogContent className="sm:max-w-sm" style={{ padding: "28px" }}>
-        <DialogHeader style={{ marginBottom: "12px" }}>
-          <DialogTitle style={{ color: "var(--p-navy)", fontSize: "16px", fontWeight: "700" }}>Delete Participant?</DialogTitle>
-        </DialogHeader>
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          <p style={{ fontSize: 13, color: "var(--p-muted)", lineHeight: 1.6 }}>
-            This will permanently remove{" "}
-            <strong style={{ color: "#1e293b" }}>{participant.businessName}</strong>{" "}
-            and all associated enrollments. This cannot be undone.
-          </p>
           {error && (
             <div className="p-alert-error">
               <AlertCircle size={15} style={{ flexShrink: 0 }} /> {error}
@@ -453,12 +435,22 @@ export default function Participants() {
     setLoading(true); setError("");
     try {
       const result = await fetchParticipants({
-        page, limit, search, status: statusFilter, district: districtFilter,
+        page, limit, search, district: districtFilter,
       });
-      setParticipants(result.data);
+      const rows = statusFilter
+        ? result.data.filter((p) => p.status === statusFilter)
+        : result.data;
+      setParticipants(rows);
       setMeta(result.meta);
     } catch (err) {
-      if (err.message !== "Unauthorised") setError(err.message);
+      const status = err.response?.status;
+      const message =
+        err.response?.data?.message ||
+        err.message ||
+        (status === 401 || status === 403
+          ? "You don't have permission to view participants, or the session could not access this resource."
+          : "Failed to load participants.");
+      setError(message);
     } finally {
       setLoading(false);
     }

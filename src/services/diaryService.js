@@ -1,6 +1,6 @@
 import api from './api';
 
-const EVENTS_BASE = '/api/diary-events';
+const EVENTS_BASE = '/diary-events';
 
 const buildQueryString = (params = {}) => {
   const searchParams = new URLSearchParams();
@@ -67,6 +67,11 @@ export const diaryService = {
   getDiaryEvents: async (params = {}) => {
     const query = buildQueryString(params);
     return api.get(`${EVENTS_BASE}${query}`);
+  },
+
+  getDiaryEventsByUser: async (userId, params = {}) => {
+    const query = buildQueryString(params);
+    return api.get(`${EVENTS_BASE}/user/${userId}${query}`);
   },
 
   getDiaryEventById: async (id) => {
@@ -149,7 +154,7 @@ export const diaryService = {
     return unsupportedApiError('Service reports');
   },
 
-  // Legacy calendar wrappers now point to /api/diary-events
+  // Legacy calendar wrappers now point to /diary-events
   getCalendarEvents: async (userId, month, year) => {
     void userId;
     const query = {
