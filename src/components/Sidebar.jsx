@@ -34,6 +34,9 @@ export default function Sidebar({ handleLogout }) {
         <a href='/participants' className={`nav-item ${currentPath === '/participants' ? 'active' : ''}`}>
           Participants
         </a>
+        <a href='/enrollments' className={`nav-item ${currentPath === '/enrollments' ? 'active' : ''}`}>
+          Enrollments
+        </a>
         <a href='/analytics' className={`nav-item ${currentPath === '/analytics' ? 'active' : ''}`}>
           Analytics
         </a>

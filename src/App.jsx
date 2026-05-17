@@ -6,6 +6,7 @@ import DiaryPage from './pages/DiaryPage';
 import Programs from './pages/Programs';
 import Participants from './pages/Participants';
 import Analytics from './pages/Analytics';
+import ProgramEnrollments from './pages/ProgramEnrollments'
 
 export default function App() {
   return (
@@ -19,6 +20,7 @@ export default function App() {
         <Route path='/participants' element={<Participants />} />
         <Route path='/analytics' element={<Analytics />} />
         <Route path='/' element={<Navigate to='/dashboard' replace />} />
+        <Route path="/enrollments" element={<ProgramEnrollments />} />
       </Routes>
     </Router>
   );
