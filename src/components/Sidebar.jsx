@@ -48,13 +48,6 @@ export default function Sidebar({ handleLogout }) {
       </nav>
 
       <div className='sidebar-footer'>
-        <div className='admin-info'>
-          <div className='admin-avatar'>I</div>
-          <div className='admin-details'>
-            <p className='admin-name'>IDB Admin</p>
-            <p className='admin-role'>Administrator</p>
-          </div>
-        </div>
         <button onClick={handleLogout} className='sidebar-logout'>
           <LogOut size={18} /> Log Out
         </button>
