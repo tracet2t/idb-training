@@ -159,6 +159,11 @@ function AddParticipantDialog({ onSuccess }) {
           subtitle="Industrial Development Board of Ceylon — SME Directory"
         />
         <div className="p-dialog-body">
+      <DialogContent className="sm:max-w-lg" style={{ maxHeight: "90vh", overflowY: "auto", padding: "28px" }}>
+        <DialogHeader style={{ marginBottom: "12px" }}>
+          <DialogTitle style={{ color: "var(--p-navy)", fontSize: "16px", fontWeight: "700" }}>Add New Participant</DialogTitle>
+        </DialogHeader>
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           {error && (
             <div className="p-alert-error">
               <AlertCircle size={15} style={{ flexShrink: 0, marginTop: 1 }} />
@@ -271,6 +276,11 @@ function EditParticipantDialog({ participant, onSuccess }) {
           subtitle="Update participant details below"
         />
         <div className="p-dialog-body">
+      <DialogContent className="sm:max-w-lg" style={{ maxHeight: "90vh", overflowY: "auto", padding: "28px" }}>
+        <DialogHeader style={{ marginBottom: "12px" }}>
+          <DialogTitle style={{ color: "var(--p-navy)", fontSize: "16px", fontWeight: "700" }}>Edit Participant</DialogTitle>
+        </DialogHeader>
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           {error && (
             <div className="p-alert-error">
               <AlertCircle size={15} style={{ flexShrink: 0, marginTop: 1 }} />
@@ -395,6 +405,16 @@ function DeleteConfirmDialog({ participant, onSuccess }) {
               </span>
             </div>
           </div>
+      <DialogContent className="sm:max-w-sm" style={{ padding: "28px" }}>
+        <DialogHeader style={{ marginBottom: "12px" }}>
+          <DialogTitle style={{ color: "var(--p-navy)", fontSize: "16px", fontWeight: "700" }}>Delete Participant?</DialogTitle>
+        </DialogHeader>
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <p style={{ fontSize: 13, color: "var(--p-muted)", lineHeight: 1.6 }}>
+            This will permanently remove{" "}
+            <strong style={{ color: "#1e293b" }}>{participant.businessName}</strong>{" "}
+            and all associated enrollments. This cannot be undone.
+          </p>
           {error && (
             <div className="p-alert-error">
               <AlertCircle size={15} style={{ flexShrink: 0 }} /> {error}
@@ -501,7 +521,7 @@ export default function Participants() {
               <Search
                 size={15}
                 style={{
-                  position:'absolute', left:11, top:'50%',
+                  position:'absolute', left:14, top:'50%',
                   transform:'translateY(-50%)',
                   color:'#64748b', pointerEvents:'none',
                   width:15, height:15, flexShrink:0,

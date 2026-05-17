@@ -1,4 +1,4 @@
-const BASE_URL = "http://localhost:3000/api";
+const BASE_URL = "http://localhost:3000";
 
 // ── Type-safe helpers ────────────────────────────────────────────────
 const toInt = (val, fallback = undefined) => {
@@ -22,7 +22,6 @@ const STATUSES = ["active", "inactive"];
 
 /**
  * Validate & sanitize the create payload.
- * Throws a string error message if anything is wrong.
  */
 export function validateCreatePayload(raw) {
   const errors = [];
@@ -86,67 +85,77 @@ export function validateUpdatePayload(raw) {
 // ── API functions ────────────────────────────────────────────────────
 
 /**
- * GET /api/participants
- * Returns { data: Participant[], meta: { total, totalPages } }
+ * GET /users
  */
 export async function fetchParticipants({ page = 1, limit = 10, search = "", status = "", district = "" } = {}) {
   const params = new URLSearchParams({
     page:  String(toInt(page,  1)),
     limit: String(toInt(limit, 10)),
   });
+
   if (search)   params.append("search",   toStr(search));
   if (status)   params.append("status",   toEnum(status, STATUSES));
   if (district) params.append("district", toEnum(district, DISTRICTS));
 
-  const res = await fetch(`${BASE_URL}/participants?${params}`, { credentials: "include" });
+  const res = await fetch(`${BASE_URL}/users?${params}`, {
+    credentials: "include"
+  });
 
   if (res.status === 401) {
     window.location.href = "/login";
     throw new Error("Unauthorised");
   }
+
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
-    throw new Error(body.message || "Failed to load participants.");
+    throw new Error(body.message || "Failed to load users.");
   }
 
   const json = await res.json();
 
-  // Normalise response shape — backend may return raw array or { data, meta }
   if (Array.isArray(json)) {
-    return { data: json, meta: { total: json.length, totalPages: 1 } };
+    return {
+      data: json,
+      meta: {
+        total: json.length,
+        totalPages: 1
+      }
+    };
   }
+
   return {
     data: Array.isArray(json.data) ? json.data : [],
     meta: {
-      total:      toInt(json.meta?.total,      0),
+      total: toInt(json.meta?.total, 0),
       totalPages: toInt(json.meta?.totalPages, 1),
     },
   };
 }
 
 /**
- * GET /api/participants/:id
+ * GET /users/:nic
  */
 export async function fetchParticipantById(id) {
-  const safeId = toInt(id);
-  if (!safeId) throw new Error("Invalid participant ID.");
+  const res = await fetch(`${BASE_URL}/users/${id}`, {
+    credentials: "include"
+  });
 
-  const res = await fetch(`${BASE_URL}/participants/${safeId}`, { credentials: "include" });
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
-    throw new Error(body.message || "Participant not found.");
+    throw new Error(body.message || "User not found.");
   }
+
   return res.json();
 }
 
 /**
- * POST /api/participants
+ * POST /users
  */
 export async function createParticipant(raw) {
-  const payload = validateCreatePayload(raw); // throws on invalid
+  const payload = validateCreatePayload(raw);
 
-  const res = await fetch(`${BASE_URL}/participants`, {
-    method:  "POST",
+  const res = await fetch(`${BASE_URL}/users`, {
+    method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
     body: JSON.stringify(payload),
@@ -154,22 +163,20 @@ export async function createParticipant(raw) {
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
-    throw new Error(body.message || "Failed to create participant.");
+    throw new Error(body.message || "Failed to create user.");
   }
+
   return res.json();
 }
 
 /**
- * PATCH /api/participants/:id
+ * PUT /users/:nic
  */
 export async function updateParticipant(id, raw) {
-  const safeId  = toInt(id);
-  if (!safeId) throw new Error("Invalid participant ID.");
+  const payload = validateUpdatePayload(raw);
 
-  const payload = validateUpdatePayload(raw); // throws on invalid
-
-  const res = await fetch(`${BASE_URL}/participants/${safeId}`, {
-    method:  "PATCH",
+  const res = await fetch(`${BASE_URL}/users/${id}`, {
+    method: "PUT",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
     body: JSON.stringify(payload),
@@ -178,29 +185,29 @@ export async function updateParticipant(id, raw) {
   if (res.status === 409 || res.status === 422) {
     throw new Error("This record was updated by someone else. Please refresh and try again.");
   }
+
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
     throw new Error(body.message || "Update failed.");
   }
+
   return res.json();
 }
 
 /**
- * DELETE /api/participants/:id
+ * DELETE /users/:nic
  */
 export async function deleteParticipant(id) {
-  const safeId = toInt(id);
-  if (!safeId) throw new Error("Invalid participant ID.");
-
-  const res = await fetch(`${BASE_URL}/participants/${safeId}`, {
+  const res = await fetch(`${BASE_URL}/users/${id}`, {
     method: "DELETE",
     credentials: "include",
   });
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
-    throw new Error(body.message || "Failed to delete participant.");
+    throw new Error(body.message || "Failed to delete user.");
   }
+
   return true;
 }
 

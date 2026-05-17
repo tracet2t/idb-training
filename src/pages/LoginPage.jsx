@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import idbLogo from '../assets/idb-new-logo.webp';
 import { useMutation } from '@tanstack/react-query';
 import { login } from '../services/authService';
@@ -100,6 +101,8 @@ function PasswordInput({ value, onChange, placeholder, error }) {
 }
 
 export default function LoginPage() {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [emailError, setEmailError] = useState('');
@@ -110,11 +113,10 @@ export default function LoginPage() {
   const loginMutation = useMutation({
     mutationFn: ({ email, password }) => login(email, password),
     onSuccess: (data) => {
-      setAuth(data.user, data.user.role);
-      toast.success('Login successful! Redirecting...');
-      setTimeout(() => {
-        window.location.href = '/dashboard';
-      }, 1000);
+      setAuth(data.user, data.user?.role);
+      toast.success(data.message || 'Login successful!');
+      const from = location.state?.from?.pathname ?? '/dashboard';
+      navigate(from, { replace: true });
     },
     onError: (err) => {
       const message = err.response?.data?.message || 'Login failed. Please try again.';
