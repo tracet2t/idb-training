@@ -6,6 +6,9 @@ import SettingsPage from './pages/SettingsPage';
 import Programs from './pages/Programs';
 import Participants from './pages/Participants';
 import Analytics from './pages/Analytics';
+
+import ProgramEnrollments from './pages/ProgramEnrollments'
+
 import DiaryPage from './pages/DiaryPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import GuestRoute from './components/GuestRoute';
@@ -34,6 +37,17 @@ export default function App() {
   return (
     <Router>
       <Routes>
+
+        <Route 
+          path="/enrollments" 
+          element={
+            <ProtectedRoute>
+             <ProgramEnrollments />
+            </ProtectedRoute>
+           
+            } 
+        />
+
         <Route
           path="/login"
           element={
@@ -90,8 +104,6 @@ export default function App() {
             </ProtectedRoute>
           }
         />
-        <Route path="/" element={<Navigate to="/login" replace />} />
-        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </Router>
   );
