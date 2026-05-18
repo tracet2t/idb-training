@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Bell, Settings, LogOut, Menu, X, TrendingUp } from 'lucide-react';
+import { LogOut, Menu, X, TrendingUp } from 'lucide-react';
 import { Line, Bar, Pie } from 'react-chartjs-2';
 import { useNavigate } from 'react-router-dom';
 import { logout } from '../services/authService';
@@ -74,13 +74,6 @@ export default function DashboardPage() {
           </div>
 
           <div className='header-right'>
-            <button className='icon-btn' title='Notifications'>
-              <Bell size={20} style={{ color: '#ffffff' }} />
-            </button>
-            <button className='icon-btn' title='Settings' onClick={() => navigate('/settings')}>
-              <Settings size={20} style={{ color: '#ffffff' }} />
-            </button>
-
             <div className='user-menu'>
               <button
                 className='user-btn'

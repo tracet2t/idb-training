@@ -1,5 +1,5 @@
 import {
-  Search, Bell, Plus, Pencil, Trash2, Loader2,
+  Search, Plus, Pencil, Trash2, Loader2,
   AlertCircle, X, Building2, User, Mail, Phone,
   MapPin, Briefcase, Hash, ChevronDown,   
 } from "lucide-react";
@@ -495,12 +495,6 @@ export default function Participants() {
             <h1>PARTICIPANTS</h1>
             <p>Manage SME owners and training attendees.</p>
           </div>
-          <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-            <button className="icon-btn" title="Notifications">
-              <Bell size={20} />
-            </button>
-            <AddParticipantDialog onSuccess={load} />
-          </div>
         </header>
 
         <main className="participants-inner">
@@ -587,6 +581,10 @@ export default function Participants() {
                 )}
               </div>
             )}
+
+            <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+              <AddParticipantDialog onSuccess={load} />
+            </div>
           </div>
 
           {/* ── Table ── */}

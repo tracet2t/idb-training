@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Bell, Filter, Plus, Trash2, Play, Loader2, AlertCircle } from "lucide-react";
+import { Filter, Plus, Trash2, Play, Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -119,7 +119,6 @@ export default function Analytics() {
             <p className="header-subtitle">Build queries to segment and analyze data.</p>
           </div>
           <div className="header-right">
-            <button className="icon-btn" title="Notifications"><Bell size={20} /></button>
           </div>
         </header>
 

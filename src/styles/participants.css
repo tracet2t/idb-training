@@ -307,6 +307,27 @@
   padding: 0;
 }
 
+/* Button wrapper in filter bar */
+.participants-filter-bar > div[style*="display: flex"] {
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+/* Add Participant button in filter bar */
+.participants-filter-bar .user-btn {
+  background: var(--p-red-hov);
+  border: 1px solid var(--p-red-hov);
+  color: white;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.participants-filter-bar .user-btn:hover {
+  background: var(--p-red);
+  border-color: var(--p-red);
+}
+
 /* ── Table card ───────────────────────────────────────────────────── */
 .participants-table-card {
   border: 1px solid var(--p-border);
