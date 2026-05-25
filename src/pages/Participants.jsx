@@ -9,6 +9,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
 import Sidebar from "../components/Sidebar";
+import BulkImportDialog from "../components/BulkImportDialog";
 import {
   fetchParticipants, createParticipant, updateParticipant, deleteParticipant,
   DISTRICTS, STATUSES,
@@ -437,11 +438,31 @@ export default function Participants() {
       const result = await fetchParticipants({
         page, limit, search, district: districtFilter,
       });
-      const rows = statusFilter
-        ? result.data.filter((p) => p.status === statusFilter)
-        : result.data;
+      
+      let rows = result.data;
+      
+      // Apply status filter
+      if (statusFilter) {
+        rows = rows.filter((p) => p.status === statusFilter);
+      }
+      
+      // Apply search filter
+      if (search) {
+        const searchLower = search.toLowerCase();
+        rows = rows.filter(p =>
+          p.businessName?.toLowerCase().includes(searchLower) ||
+          p.ownerName?.toLowerCase().includes(searchLower) ||
+          p.email?.toLowerCase().includes(searchLower)
+        );
+      }
+      
+      // Apply district filter
+      if (districtFilter) {
+        rows = rows.filter(p => p.district === districtFilter);
+      }
+      
       setParticipants(rows);
-      setMeta(result.meta);
+      setMeta({ total: rows.length, totalPages: Math.ceil(rows.length / limit) });
     } catch (err) {
       const status = err.response?.status;
       const message =
@@ -583,6 +604,7 @@ export default function Participants() {
             )}
 
             <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+              <BulkImportDialog onSuccess={load} />
               <AddParticipantDialog onSuccess={load} />
             </div>
           </div>
