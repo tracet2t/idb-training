@@ -1,9 +1,9 @@
-import { useState } from 'react';
 import { LogOut, Menu, X, TrendingUp } from 'lucide-react';
 import { Line, Bar, Pie } from 'react-chartjs-2';
 import { useNavigate } from 'react-router-dom';
 import { logout } from '../services/authService';
 import useAuthStore from '../store/authStore';
+import { useState, useEffect } from 'react';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -42,12 +42,29 @@ export default function DashboardPage() {
   const user = useAuthStore((state) => state.user);
   const displayName = user?.displayName ?? 'User';
 
-  const stats = [
-    { label: 'Active Projects', value: '24', change: '+12%', color: 'navy' },
-    { label: 'Team Members', value: '156', change: '+8%', color: 'red' },
-    { label: 'Tasks Completed', value: '892', change: '+23%', color: 'gold' },
-    { label: 'Success Rate', value: '94%', change: '+5%', color: 'navy' },
-  ];
+  const [stats, setStats] = useState([
+  { label: 'Active Programs', value: '...', color: 'navy' },
+  { label: 'Active Participants', value: '...', color: 'red' },
+  { label: 'Programs Completed', value: '...', color: 'gold' },
+  { label: 'Success Rate', value: '...', color: 'navy' },
+]);
+
+useEffect(() => {
+  fetch('http://localhost:3000/dashboard/summary', {
+    credentials: 'include',
+  })
+    .then((res) => res.json())
+    .then((json) => {
+      const d = json.data;
+      setStats([
+        { label: 'Active Programs', value: String(d.activePrograms), color: 'navy' },
+        { label: 'Active Participants', value: String(d.activeParticipants), color: 'red' },
+        { label: 'Programs Completed', value: String(d.completedPrograms), color: 'gold' },
+        { label: 'Success Rate', value: `${d.successRate}%`, color: 'navy' },
+      ]);
+    })
+    .catch((err) => console.error('Failed to fetch dashboard summary:', err));
+}, []);
 
   const handleLogout = async () => {
     try {
@@ -110,7 +127,6 @@ export default function DashboardPage() {
                 key={idx}
                 label={stat.label}
                 value={stat.value}
-                change={stat.change}
                 color={stat.color}
               />
             ))}
