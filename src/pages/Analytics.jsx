@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectOption } from "@/components/ui/select";
 import Sidebar from "../components/Sidebar";
 
-const BASE_URL = "http://localhost:3000/api";
+const BASE_URL = "http://localhost:3000";
 
 const colors = {
   navyMain: '#1a3a5c',
