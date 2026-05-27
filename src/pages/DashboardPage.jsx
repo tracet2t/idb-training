@@ -1,5 +1,5 @@
 import { LogOut, Menu, X, TrendingUp } from 'lucide-react';
-import { Line, Bar, Pie } from 'react-chartjs-2';
+import { Line, Pie } from 'react-chartjs-2';
 import { useNavigate } from 'react-router-dom';
 import { logout } from '../services/authService';
 import useAuthStore from '../store/authStore';
@@ -10,7 +10,6 @@ import {
   LinearScale,
   PointElement,
   LineElement,
-  BarElement,
   ArcElement,
   Title,
   Tooltip,
@@ -19,7 +18,7 @@ import {
 import colors from '../theme/color';
 import Sidebar from '../components/Sidebar';
 import StatsCard from '../components/dashboard/StatsCard';
-import RecentActivity from '../components/dashboard/RecentActivity';
+import ProgramsRanking from '../components/dashboard/ProgramsRanking';
 import { getUserInitial } from '../utils/userDisplay';
 import '../styles/dashboard.css';
 
@@ -28,7 +27,6 @@ ChartJS.register(
   LinearScale,
   PointElement,
   LineElement,
-  BarElement,
   ArcElement,
   Title,
   Tooltip,
@@ -43,28 +41,142 @@ export default function DashboardPage() {
   const displayName = user?.displayName ?? 'User';
 
   const [stats, setStats] = useState([
-  { label: 'Active Programs', value: '...', color: 'navy' },
-  { label: 'Active Participants', value: '...', color: 'red' },
-  { label: 'Programs Completed', value: '...', color: 'gold' },
-  { label: 'Success Rate', value: '...', color: 'navy' },
-]);
+    { label: 'Active Programs', value: '...', color: 'navy' },
+    { label: 'Active Participants', value: '...', color: 'red' },
+    { label: 'Programs Completed', value: '...', color: 'gold' },
+    { label: 'Success Rate', value: '...', color: 'navy' },
+  ]);
 
-useEffect(() => {
-  fetch('http://localhost:3000/dashboard/summary', {
-    credentials: 'include',
-  })
-    .then((res) => res.json())
-    .then((json) => {
-      const d = json.data;
-      setStats([
-        { label: 'Active Programs', value: String(d.activePrograms), color: 'navy' },
-        { label: 'Active Participants', value: String(d.activeParticipants), color: 'red' },
-        { label: 'Programs Completed', value: String(d.completedPrograms), color: 'gold' },
-        { label: 'Success Rate', value: `${d.successRate}%`, color: 'navy' },
-      ]);
+  const [lineChartData, setLineChartData] = useState({
+    labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5', 'Week 6'],
+    datasets: [
+      {
+        label: 'Participants Enrolled',
+        data: [0, 0, 0, 0, 0, 0],
+        borderColor: colors.navy.main,
+        backgroundColor: `${colors.navy.main}15`,
+        borderWidth: 3,
+        fill: true,
+        pointBackgroundColor: colors.navy.main,
+        pointBorderColor: '#fff',
+        pointBorderWidth: 2,
+        pointRadius: 5,
+        pointHoverRadius: 7,
+        tension: 0.4,
+      },
+    ],
+  });
+
+  const [pieChartData, setPieChartData] = useState({
+    labels: [],
+    datasets: [
+      {
+        data: [],
+        backgroundColor: [
+          colors.navy.main,
+          colors.red.main,
+          colors.gold.main,
+          colors.navy.light,
+        ],
+        borderColor: '#fff',
+        borderWidth: 2,
+      },
+    ],
+  });
+
+  useEffect(() => {
+    fetch('http://localhost:3000/dashboard/summary', {
+      credentials: 'include',
     })
-    .catch((err) => console.error('Failed to fetch dashboard summary:', err));
-}, []);
+      .then((res) => res.json())
+      .then((json) => {
+        const d = json.data;
+        setStats([
+          { label: 'Active Programs', value: String(d.activePrograms), color: 'navy' },
+          { label: 'Active Participants', value: String(d.activeParticipants), color: 'red' },
+          { label: 'Programs Completed', value: String(d.completedPrograms), color: 'gold' },
+          { label: 'Success Rate', value: `${d.successRate}%`, color: 'navy' },
+        ]);
+      })
+      .catch((err) => console.error('Failed to fetch dashboard summary:', err));
+  }, []);
+
+  // Fetch enrollment progression data
+  useEffect(() => {
+    fetch('http://localhost:3000/dashboard/enrollment-progression', {
+      credentials: 'include',
+    })
+      .then((res) => res.json())
+      .then((json) => {
+        const weeklyData = json.data;
+        setLineChartData({
+          labels: weeklyData.map((item) => item.date),
+          datasets: [
+            {
+              label: 'Participants Enrolled',
+              data: weeklyData.map((item) => item.count),
+              borderColor: colors.navy.main,
+              backgroundColor: `${colors.navy.main}15`,
+              borderWidth: 3,
+              fill: true,
+              pointBackgroundColor: colors.navy.main,
+              pointBorderColor: '#fff',
+              pointBorderWidth: 2,
+              pointRadius: 5,
+              pointHoverRadius: 7,
+              tension: 0.4,
+            },
+          ],
+        });
+      })
+      .catch((err) => console.error('Failed to fetch enrollment progression:', err));
+  }, []);
+
+  // Fetch participants by sector data
+  useEffect(() => {
+    fetch('http://localhost:3000/dashboard/participants-by-sector', {
+      credentials: 'include',
+    })
+      .then((res) => res.json())
+      .then((json) => {
+        const sectorData = json.data;
+        
+        // Ensure we have exactly 4 sectors, with defaults if fewer
+        const sectors = [
+          { sector: 'Technology', count: 0, percentage: 0 },
+          { sector: 'Business', count: 0, percentage: 0 },
+          { sector: 'Healthcare', count: 0, percentage: 0 },
+          { sector: 'Finance', count: 0, percentage: 0 },
+        ];
+
+        // Update sectors with actual data from API
+        sectorData.forEach((item) => {
+          const existing = sectors.find((s) => s.sector === item.sector);
+          if (existing) {
+            existing.count = item.count;
+            existing.percentage = item.percentage;
+          }
+        });
+
+        setPieChartData({
+          labels: sectors.map((s) => s.sector),
+          datasets: [
+            {
+              data: sectors.map((s) => s.count),
+              backgroundColor: [
+                colors.navy.main,
+                colors.red.main,
+                colors.gold.main,
+                colors.navy.light,
+              ],
+              borderColor: '#fff',
+              borderWidth: 2,
+            },
+          ],
+        });
+      })
+      .catch((err) => console.error('Failed to fetch participants by sector:', err));
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -135,50 +247,12 @@ useEffect(() => {
 
         {/* Charts Section */}
         <section className='charts-section'>
+          {/* Pie chart and Ranking side by side - Row 1 */}
           <div className='charts-row'>
-            <div className='chart-card-wrapper'>
+            <div className='chart-card-wrapper half-width'>
               <div className='chart-header'>
                 <div>
-                  <h3 style={{ color: colors.neutral.textPrimary }}>Project Progress</h3>
-                  <p className='chart-subtitle'>Over the last 6 weeks</p>
-                </div>
-                <button
-                  className='chart-menu'
-                  style={{ color: colors.neutral.textMuted }}
-                >
-                  ⋮
-                </button>
-              </div>
-              <div className='chart-container-chartjs'>
-                <Line data={lineChartData} options={chartOptions} />
-              </div>
-            </div>
-
-            <div className='chart-card-wrapper'>
-              <div className='chart-header'>
-                <div>
-                  <h3 style={{ color: colors.neutral.textPrimary }}>Team Performance</h3>
-                  <p className='chart-subtitle'>Tasks completed per team</p>
-                </div>
-                <button
-                  className='chart-menu'
-                  style={{ color: colors.neutral.textMuted }}
-                >
-                  ⋮
-                </button>
-              </div>
-              <div className='chart-container-chartjs'>
-                <Bar data={barChartData} options={chartOptions} />
-              </div>
-            </div>
-          </div>
-
-          <div className='charts-row'>
-            <div className='chart-card-wrapper'>
-              <div className='chart-header'>
-                <div>
-                  <h3 style={{ color: colors.neutral.textPrimary }}>Resource Allocation</h3>
-                  <p className='chart-subtitle'>Team distribution across departments</p>
+                  <h3 style={{ color: colors.neutral.textPrimary }}>Participants by Sector</h3>
                 </div>
                 <button
                   className='chart-menu'
@@ -191,7 +265,28 @@ useEffect(() => {
                 <Pie data={pieChartData} options={pieChartOptions} />
               </div>
             </div>
-            <RecentActivity />
+
+            <div className='chart-card-wrapper half-width'>
+              <ProgramsRanking />
+            </div>
+          </div>
+
+          {/* Full width line chart - Row 2 */}
+          <div className='chart-card-wrapper full-width'>
+            <div className='chart-header'>
+              <div>
+                <h3 style={{ color: colors.neutral.textPrimary }}>Participants Enrolled</h3>
+              </div>
+              <button
+                className='chart-menu'
+                style={{ color: colors.neutral.textMuted }}
+              >
+                ⋮
+              </button>
+            </div>
+            <div className='chart-container-chartjs'>
+              <Line data={lineChartData} options={chartOptions} />
+            </div>
           </div>
         </section>
       </div>
@@ -222,6 +317,14 @@ const chartOptions = {
       borderColor: colors.navy.light,
       borderWidth: 1,
       cornerRadius: 6,
+      callbacks: {
+        title: function (context) {
+          return context[0].label;
+        },
+        label: function (context) {
+          return `${context.dataset.label}: ${context.parsed.y} participants`;
+        },
+      },
     },
   },
   scales: {
@@ -269,61 +372,17 @@ const pieChartOptions = {
       borderColor: colors.navy.light,
       borderWidth: 1,
       cornerRadius: 6,
+      callbacks: {
+        label: function (context) {
+          const label = context.label || '';
+          const value = context.parsed || 0;
+          const total = context.dataset.data.reduce((a, b) => a + b, 0);
+          const percentage = ((value / total) * 100).toFixed(1);
+          return `${label}: ${value} (${percentage}%)`;
+        },
+      },
     },
   },
 };
 
-const lineChartData = {
-  labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5', 'Week 6'],
-  datasets: [
-    {
-      label: 'Progress %',
-      data: [30, 45, 60, 70, 85, 95],
-      borderColor: colors.navy.main,
-      backgroundColor: `${colors.navy.main}15`,
-      borderWidth: 3,
-      fill: true,
-      pointBackgroundColor: colors.navy.main,
-      pointBorderColor: '#fff',
-      pointBorderWidth: 2,
-      pointRadius: 5,
-      pointHoverRadius: 7,
-      tension: 0.4,
-    },
-  ],
-};
-
-const barChartData = {
-  labels: ['Team A', 'Team B', 'Team C', 'Team D'],
-  datasets: [
-    {
-      label: 'Tasks Completed',
-      data: [250, 320, 280, 310],
-      backgroundColor: [
-        colors.navy.main,
-        colors.red.main,
-        colors.gold.main,
-        colors.navy.light,
-      ],
-      borderRadius: 6,
-      borderSkipped: false,
-    },
-  ],
-};
-
-const pieChartData = {
-  labels: ['Development', 'Design', 'Management', 'QA'],
-  datasets: [
-    {
-      data: [35, 25, 20, 20],
-      backgroundColor: [
-        colors.navy.main,
-        colors.red.main,
-        colors.gold.main,
-        colors.navy.light,
-      ],
-      borderColor: '#fff',
-      borderWidth: 2,
-    },
-  ],
-};
+// Chart.js configuration and data (options only - data now comes from API)
