@@ -2,7 +2,7 @@
 // All API calls for the Enrollments module (used by the Analytics page).
 // Import and use these functions in Analytics.jsx — no fetch() calls needed there.
 
-const BASE_URL = "http://localhost:3000/api";
+const BASE_URL = "http://localhost:3000";
 
 /**
  * Fetch a paginated, filtered list of enrollments.

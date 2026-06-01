@@ -11,7 +11,7 @@ const toEnum = (val, allowed, fallback = "") =>
   allowed.includes(String(val)) ? String(val) : fallback;
 
 const DISTRICTS = [
-  "Colombo", "Gampaha", "Kaluthara", "Kurunegala", "Kandy", "Matale", "Nuwara_Eliya",
+  "Colombo", "Gampaha", "Kaluthara", "Kurunegala", "Kandy", "Matale", "Nuwara Eliya",
   "Galle", "Matara", "Hambantota", "Ampara", "Trincomalee", "Batticaloa", "Mullaitivu",
   "Puttalam", "Anuradhapura", "Polonnaruwa", "Badulla", "Monaragala", "Ratnapura",
   "Kegalle", "Jaffna", "Kilinochchi", "Mannar", "Vavuniya",
@@ -168,6 +168,41 @@ export async function updateParticipant(id, raw) {
 export async function deleteParticipant(id) {
   await api.delete(`/participants/${id}`);
   return true;
+}
+
+/** POST /participants/bulk — Bulk import participants */
+export async function bulkImportParticipants(participants) {
+  try {
+    // Validate each participant
+    const validatedParticipants = participants.map(p => validateCreatePayload(p));
+
+    const response = await api.post("/participants/bulk", {
+      participants: validatedParticipants,
+    });
+
+    const result = unwrapBody(response.data);
+    return {
+      imported: result.imported || validatedParticipants.length,
+      skipped: result.skipped || 0,
+      errors: result.errors || [],
+    };
+  } catch (err) {
+    throw new Error(getErrorMessage(err, "Bulk import failed."));
+  }
+}
+
+/** POST /participants/check-duplicates — Check for duplicate registration numbers */
+export async function checkDuplicateRegistrationNumbers(registrationNumbers) {
+  try {
+    const response = await api.post("/participants/check-duplicates", {
+      registrationNumbers,
+    });
+
+    const result = unwrapBody(response.data);
+    return Array.isArray(result) ? result : result.duplicates || [];
+  } catch (err) {
+    throw new Error(getErrorMessage(err, "Duplicate check failed."));
+  }
 }
 
 export { DISTRICTS, STATUSES };

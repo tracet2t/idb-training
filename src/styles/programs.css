@@ -167,6 +167,27 @@
   border-top: 1px solid var(--pg-border);
 }
 
+/* Button wrapper in filter bar */
+.programs-filter-bar > div[style*="display: flex"] {
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+/* Add Program button in filter bar */
+.programs-filter-bar .user-btn {
+  background: var(--pg-red-hov);
+  border: 1px solid var(--pg-red-hov);
+  color: white;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.programs-filter-bar .user-btn:hover {
+  background: var(--pg-red);
+  border-color: var(--pg-red);
+}
+
 .programs-filter-pills-label { font-size: 11px; color: var(--pg-muted); line-height: 24px; }
 
 .programs-filter-pill {

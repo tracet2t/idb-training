@@ -150,6 +150,27 @@
 
 .enrollments-filter-pill button:hover { opacity: 1; }
 
+/* Button wrapper in filter bar */
+.enrollments-filter-bar > div[style*="display: flex"] {
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+/* Add Enrollment button in filter bar */
+.enrollments-filter-bar .user-btn {
+  background: var(--en-red-hov);
+  border: 1px solid var(--en-red-hov);
+  color: white;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.enrollments-filter-bar .user-btn:hover {
+  background: var(--en-red);
+  border-color: var(--en-red);
+}
+
 /* Table card */
 .enrollments-table-card {
   border: 1px solid var(--en-border);
