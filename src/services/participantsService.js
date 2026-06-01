@@ -1,4 +1,4 @@
-const BASE_URL = "http://localhost:3000/api";
+const BASE_URL = "http://localhost:3000";
 
 // ── Type-safe helpers ────────────────────────────────────────────────
 const toInt = (val, fallback = undefined) => {
@@ -47,7 +47,7 @@ export function validateCreatePayload(raw) {
 
   if (errors.length) throw errors.join(" ");
 
-  return { businessName, ownerName, email, phone, district, sector, registrationNumber };
+  return { name: businessName, businessName,   ownerName, email, phone, district, sector, registrationNumber };
 }
 
 /**
