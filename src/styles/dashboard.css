@@ -435,6 +435,11 @@
     height: 350px;
   }
 
+  .chart-card-wrapper.half-width {
+    display: flex;
+    flex-direction: column;
+  }
+
   .chart-header {
     display: flex;
     justify-content: space-between;
@@ -485,6 +490,7 @@
     align-items: center;
     justify-content: center;
     position: relative;
+    margin: auto 0;
   }
 
   /* Responsive Design */
