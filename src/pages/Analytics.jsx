@@ -1,317 +1,389 @@
-import { useState } from "react";
-import { Bell, Filter, Plus, Trash2, Play, Loader2, AlertCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Select, SelectOption } from "@/components/ui/select";
+import { useState, useEffect } from "react";
+import {
+  Bell, Filter, Plus, Trash2, Play,
+  Loader2, AlertCircle, Download, Database, SearchX,
+} from "lucide-react";
 import Sidebar from "../components/Sidebar";
+import { getAnalyticsFields, runAnalyticsQuery, exportToCsv } from "../services/analyticsService";
+import "../styles/Analytics.css";
 
-const BASE_URL = "http://localhost:3000/api";
+// ── Helpers ───────────────────────────────────────────────────────────
 
-const colors = {
-  navyMain: '#1a3a5c',
-  navyPale: '#B0D4F1',
-  idbRed: '#8B1A1A',
-  idbGold: '#C8960C',
-  pageBg: '#f0f4f8',
-  cardBg: '#ffffff',
-};
+function humanizeCol(col) {
+  return col.replace(/([A-Z])/g, " $1").trim();
+}
 
-const FIELD_OPTIONS = [
-  { value: 'participants', label: 'Participants', endpoint: '/participants' },
-  { value: 'programs',     label: 'Programs',     endpoint: '/programs' },
-  { value: 'enrollments',  label: 'Enrollments',  endpoint: '/enrollments' },
+function StatusBadge({ value }) {
+  const v = (value ?? "").toLowerCase();
+  let cls = "status-badge";
+  if (v === "active" || v === "enrolled") cls += " status-badge--active";
+  else if (v === "completed")             cls += " status-badge--completed";
+  else if (v)                             cls += " status-badge--other";
+  return <span className={cls}>{value || "—"}</span>;
+}
+
+const STATUS_COLS = new Set(["status", "completionStatus"]);
+const DATE_COLS   = (col) => col.includes("Date") || col.includes("At");
+
+const RESULT_COLUMNS = [
+  "businessName", "ownerName", "email", "phone", "district", "sector", "status"
 ];
 
-const FILTER_FIELDS = {
-  participants: [
-    { value: 'search',   label: 'Name / Business / Email' },
-    { value: 'status',   label: 'Status' },
-    { value: 'district', label: 'District' },
-    { value: 'sector',   label: 'Sector' },
-  ],
-  programs: [
-    { value: 'search',   label: 'Program Name' },
-    { value: 'status',   label: 'Status' },
-    { value: 'province', label: 'Province' },
-    { value: 'district', label: 'District' },
-    { value: 'mode',     label: 'Mode' },
-  ],
-  enrollments: [
-    { value: 'completionStatus', label: 'Completion Status' },
-    { value: 'programId',        label: 'Program ID' },
-    { value: 'participantId',    label: 'Participant ID' },
-  ],
-};
+const ENTITY_OPTIONS = [
+  { value: "participants", label: "Participants" },
+  { value: "programs",     label: "Programs"     },
+  { value: "enrollments",  label: "Enrollments"  },
+];
 
-// Result table columns per entity
-const COLUMNS = {
-  participants: ['businessName', 'ownerName', 'phone', 'district', 'sector', 'status'],
-  programs:     ['name', 'province', 'district', 'mode', 'status', 'capacity', 'fee'],
-  enrollments:  ['id', 'programId', 'participantId', 'completionStatus', 'ticketPrice', 'enrollmentDate'],
-};
+// ── Value input — renders text, select, date, or number based on field type
+function ValueInput({ field, fieldDef, value, onChange }) {
+  if (!fieldDef) return (
+    <input className="rule-value-input" placeholder="Enter value..." value={value} onChange={e => onChange(e.target.value)} />
+  );
+
+  const noValue = ["is empty", "is not empty", "this month", "this year"].includes(field?.op);
+  if (noValue) return <span style={{ flex: 2, fontSize: 12, color: "var(--color-text-tertiary, #888)", padding: "0 8px" }}>no value needed</span>;
+
+  if (fieldDef.type === "select" && fieldDef.options) {
+    return (
+      <select className="rule-value-input" value={value} onChange={e => onChange(e.target.value)}>
+        <option value="">Select...</option>
+        {fieldDef.options.map(o => <option key={o} value={o}>{o}</option>)}
+      </select>
+    );
+  }
+
+  if (fieldDef.type === "date") {
+    return field?.op === "between"
+      ? <input className="rule-value-input" placeholder="2024-01-01, 2024-12-31" value={value} onChange={e => onChange(e.target.value)} />
+      : <input className="rule-value-input" type="date" value={value} onChange={e => onChange(e.target.value)} />;
+  }
+
+  if (fieldDef.type === "number") {
+    return <input className="rule-value-input" type="number" placeholder="Enter number..." value={value} onChange={e => onChange(e.target.value)} />;
+  }
+
+  return <input className="rule-value-input" placeholder="Enter value..." value={value} onChange={e => onChange(e.target.value)} />;
+}
+
+// ── Main component ────────────────────────────────────────────────────
 
 export default function Analytics() {
-  const [matchType, setMatchType] = useState("ALL");
-  const [entity, setEntity] = useState("participants");
-  const [rules, setRules] = useState([
-    { id: 1, not: false, field: "search", value: "" },
+  const [fields,    setFields]    = useState(null);   // { participants: [...], programs: [...], enrollments: [...] }
+  const [matchMode, setMatchMode] = useState("all");
+  const [rules,     setRules]     = useState([
+    { id: 1, entity: "participants", field: "", op: "", value: "", not: false },
   ]);
-  const [results, setResults] = useState([]);
-  const [resultMeta, setResultMeta] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [hasRun, setHasRun] = useState(false);
+  const [results,  setResults]  = useState([]);
+  const [count,    setCount]    = useState(0);
+  const [loading,  setLoading]  = useState(false);
+  const [error,    setError]    = useState("");
+  const [hasRun,   setHasRun]   = useState(false);
+  const [fieldsErr, setFieldsErr] = useState("");
 
-  const handleLogout = () => { window.location.href = '/login'; };
+  // Load fields on mount
+  useEffect(() => {
+    getAnalyticsFields()
+      .then(data => {
+        setFields(data);
+        // Set default field and op for first rule
+        if (data?.participants?.length) {
+          const f = data.participants[0];
+          setRules([{ id: 1, entity: "participants", field: f.value, op: f.ops[0], value: "", not: false }]);
+        }
+      })
+      .catch(() => setFieldsErr("Failed to load fields from server."));
+  }, []);
 
-  const addRule = () => setRules([...rules, { id: Date.now(), not: false, field: FILTER_FIELDS[entity][0].value, value: "" }]);
-  const removeRule = (id) => setRules(rules.filter(r => r.id !== id));
-  const updateRule = (id, key, value) => setRules(rules.map(r => r.id === id ? { ...r, [key]: value } : r));
+  // ── Rule helpers ──────────────────────────────────────────────────
 
-  const handleEntityChange = (e) => {
-    setEntity(e.target.value);
-    setRules([{ id: 1, not: false, field: FILTER_FIELDS[e.target.value][0].value, value: "" }]);
-    setResults([]);
-    setHasRun(false);
+  const addRule = (entity) => {
+    if (!fields) return;
+    const entityFields = fields[entity] || [];
+    const f = entityFields[0];
+    setRules(prev => [...prev, {
+      id: Date.now(),
+      entity,
+      field: f?.value || "",
+      op: f?.ops[0] || "",
+      value: "",
+      not: false,
+    }]);
   };
 
-  const runQuery = async () => {
+  const removeRule = (id) => setRules(prev => prev.filter(r => r.id !== id));
+
+  const updateRule = (id, key, val) => {
+    setRules(prev => prev.map(r => {
+      if (r.id !== id) return r;
+      const updated = { ...r, [key]: val };
+      // When field changes, reset op and value
+      if (key === "field" && fields) {
+        const entityFields = fields[updated.entity] || [];
+        const fieldDef = entityFields.find(f => f.value === val);
+        updated.op = fieldDef?.ops[0] || "";
+        updated.value = "";
+      }
+      // When op changes, reset value
+      if (key === "op") updated.value = "";
+      return updated;
+    }));
+  };
+
+  const getFieldDef = (entity, fieldValue) => {
+    if (!fields) return null;
+    return (fields[entity] || []).find(f => f.value === fieldValue);
+  };
+
+  const getOpsForRule = (rule) => {
+    const def = getFieldDef(rule.entity, rule.field);
+    return def?.ops || [];
+  };
+
+  // ── Run query ─────────────────────────────────────────────────────
+
+  const handleRunQuery = async () => {
     setLoading(true);
-    setError('');
+    setError("");
     setHasRun(true);
     try {
-      const endpoint = FIELD_OPTIONS.find(f => f.value === entity)?.endpoint;
-      const params = new URLSearchParams({ page: 1, limit: 50 });
-
-      rules.forEach(rule => {
-        if (rule.value) {
-          // If NOT rule, we still pass the param — backend filtering handles it
-          params.append(rule.field, rule.value);
-        }
-      });
-
-      const res = await fetch(`${BASE_URL}${endpoint}?${params}`, {
-        credentials: 'include',
-      });
-      if (res.status === 401) { window.location.href = '/login'; return; }
-      if (!res.ok) throw new Error('Query failed');
-      const json = await res.json();
-      setResults(json.data || []);
-      setResultMeta(json.meta || null);
+      const validRules = rules.filter(r => r.field && r.op);
+      const json = await runAnalyticsQuery(validRules, matchMode);
+      setResults(json.data?.results || []);
+      setCount(json.data?.count || 0);
     } catch (err) {
       setError(err.message);
+      setResults([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const columns = COLUMNS[entity] || [];
+  const handleExport = () => exportToCsv(results, "participants_query");
+
+  // ── Render ────────────────────────────────────────────────────────
 
   return (
     <div className="dashboard-container">
-      <Sidebar handleLogout={handleLogout} />
+      <Sidebar handleLogout={() => { window.location.href = "/login"; }} />
 
       <div className="main-content">
         <header className="dashboard-header">
           <div className="header-left">
             <h1>ANALYTICS</h1>
-            <p className="header-subtitle">Build queries to segment and analyze data.</p>
+            <p className="header-subtitle">Build queries to segment and analyse data.</p>
           </div>
           <div className="header-right">
             <button className="icon-btn" title="Notifications"><Bell size={20} /></button>
           </div>
         </header>
 
-        <main style={{ padding: '24px', overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <main className="analytics-main">
 
           {/* Query Builder Card */}
-          <div className="rounded-xl border p-6" style={{ backgroundColor: colors.cardBg, borderColor: '#e2e8f0' }}>
+          <div className="query-card">
 
-            {/* Header row */}
-            <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-              <div className="flex items-center gap-2">
-                <Filter className="w-4 h-4" style={{ color: colors.idbGold }} />
-                <span className="font-semibold text-base" style={{ color: colors.navyMain }}>Query Builder</span>
+            <div className="query-card__header">
+              <div className="query-card__title">
+                <Filter size={15} style={{ color: "var(--idb-gold)" }} />
+                <span className="query-card__title-text">Query conditions</span>
               </div>
-
-              {/* Entity selector */}
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-500">Query:</span>
-                <Select value={entity} onChange={handleEntityChange}>
-                  {FIELD_OPTIONS.map(f => <SelectOption key={f.value} value={f.value}>{f.label}</SelectOption>)}
-                </Select>
-              </div>
-
-              {/* Match type */}
-              <div className="flex items-center gap-2">
-                {["ALL", "ANY"].map((type) => (
+              <div className="match-toggle-group">
+                {["all", "any"].map(m => (
                   <button
-                    key={type}
-                    onClick={() => setMatchType(type)}
-                    className="px-3 py-1.5 text-sm rounded border transition-colors"
-                    style={matchType === type
-                      ? { backgroundColor: colors.navyPale, color: colors.navyMain, borderColor: colors.navyMain, fontWeight: 600 }
-                      : { backgroundColor: 'transparent', color: '#6b7280', borderColor: '#e2e8f0' }}
+                    key={m}
+                    className={`match-toggle-btn${matchMode === m ? " active" : ""}`}
+                    onClick={() => setMatchMode(m)}
                   >
-                    Match {type} ({type === "ALL" ? "AND" : "OR"})
+                    {m === "all" ? "ALL (AND)" : "ANY (OR)"}
                   </button>
                 ))}
               </div>
             </div>
 
-            {/* Rules */}
-            <div className="flex flex-col gap-3">
-              {rules.map((rule) => (
-                <div key={rule.id} className="flex flex-wrap items-center gap-3 p-3 rounded-lg border" style={{ borderColor: '#e2e8f0' }}>
+            {fieldsErr && (
+              <div className="results-error">
+                <AlertCircle size={16} />
+                <span>{fieldsErr}</span>
+              </div>
+            )}
 
-                  {/* NOT toggle — simple styled button, NOT a checkbox */}
+            {!fields && !fieldsErr && (
+              <div style={{ padding: "1rem", display: "flex", gap: 8, alignItems: "center", fontSize: 13, color: "#888" }}>
+                <Loader2 size={16} className="spin" /> Loading fields...
+              </div>
+            )}
+
+            {/* Rules list */}
+            {fields && (
+              <>
+                <div className="rules-list">
+                  {rules.map((rule, idx) => {
+                    const entityFields = fields[rule.entity] || [];
+                    const fieldDef = getFieldDef(rule.entity, rule.field);
+                    const ops = getOpsForRule(rule);
+
+                    return (
+                      <div key={rule.id}>
+                        {idx > 0 && (
+                          <div style={{ display: "flex", justifyContent: "center", margin: "2px 0" }}>
+                            <span
+                              className="rule-connector"
+                              style={{ cursor: "pointer" }}
+                              onClick={() => setMatchMode(m => m === "all" ? "any" : "all")}
+                            >
+                              {matchMode === "all" ? "AND" : "OR"}
+                            </span>
+                          </div>
+                        )}
+                        <div className="rule-row">
+                          <span className="rule-index">{idx + 1}</span>
+
+                          {/* Entity badge */}
+                          <span className={`entity-badge entity-badge--${rule.entity}`}>
+                            {rule.entity}
+                          </span>
+
+                          {/* NOT toggle */}
+                          <button
+                            className={`not-btn${rule.not ? " active" : ""}`}
+                            onClick={() => updateRule(rule.id, "not", !rule.not)}
+                          >
+                            NOT
+                          </button>
+
+                          {/* Field selector */}
+                          <select
+                            className="rule-field-select"
+                            value={rule.field}
+                            onChange={e => updateRule(rule.id, "field", e.target.value)}
+                          >
+                            {entityFields.map(f => (
+                              <option key={f.value} value={f.value}>{f.label}</option>
+                            ))}
+                          </select>
+
+                          {/* Operator selector */}
+                          <select
+                            className="rule-op-select"
+                            value={rule.op}
+                            onChange={e => updateRule(rule.id, "op", e.target.value)}
+                          >
+                            {ops.map(op => (
+                              <option key={op} value={op}>{op}</option>
+                            ))}
+                          </select>
+
+                          {/* Value input */}
+                          <ValueInput
+                            field={rule}
+                            fieldDef={fieldDef}
+                            value={rule.value}
+                            onChange={val => updateRule(rule.id, "value", val)}
+                          />
+
+                          {/* Remove */}
+                          <button
+                            className="remove-rule-btn"
+                            onClick={() => removeRule(rule.id)}
+                            disabled={rules.length === 1}
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Add rule buttons */}
+                <div className="query-card__add-bar">
+                  {ENTITY_OPTIONS.map(e => (
+                    <button key={e.value} className="add-rule-btn" onClick={() => addRule(e.value)}>
+                      <Plus size={13} style={{ color: "var(--idb-gold)" }} />
+                      + {e.label} rule
+                    </button>
+                  ))}
+                </div>
+
+                {/* Footer */}
+                <div className="query-card__footer">
                   <button
-                    onClick={() => updateRule(rule.id, 'not', !rule.not)}
-                    className="px-2.5 py-1 rounded text-xs font-semibold border transition-colors"
-                    style={rule.not
-                      ? { backgroundColor: colors.idbRed, color: '#fff', borderColor: colors.idbRed }
-                      : { backgroundColor: 'transparent', color: '#9ca3af', borderColor: '#e2e8f0' }}
+                    className="run-query-btn"
+                    onClick={handleRunQuery}
+                    disabled={loading}
                   >
-                    NOT
-                  </button>
-
-                  {/* Field selector */}
-                  <Select
-                    value={rule.field}
-                    onChange={(e) => updateRule(rule.id, 'field', e.target.value)}
-                    style={{ flex: '0 1 180px' }}
-                  >
-                    {(FILTER_FIELDS[entity] || []).map(f => (
-                      <SelectOption key={f.value} value={f.value}>{f.label}</SelectOption>
-                    ))}
-                  </Select>
-
-                  {/* Value input */}
-                  <Input
-                    style={{ flex: '1 1 160px' }}
-                    placeholder="Enter value..."
-                    value={rule.value}
-                    onChange={(e) => updateRule(rule.id, 'value', e.target.value)}
-                  />
-
-                  {/* Remove */}
-                  <button
-                    onClick={() => removeRule(rule.id)}
-                    className="p-2 rounded hover:bg-red-50 transition-colors shrink-0"
-                    disabled={rules.length === 1}
-                  >
-                    <Trash2 className="w-4 h-4 text-gray-400 hover:text-red-500" />
+                    {loading
+                      ? <><Loader2 size={14} className="spin" /> Running...</>
+                      : <><Play size={14} style={{ fill: "#fff" }} /> Run Query</>}
                   </button>
                 </div>
-              ))}
-            </div>
-
-            {/* Footer */}
-            <div className="flex items-center justify-between mt-6">
-              <button
-                onClick={addRule}
-                className="flex items-center gap-2 text-sm font-medium hover:opacity-80"
-                style={{ color: colors.navyMain }}
-              >
-                <Plus className="w-4 h-4" style={{ color: colors.idbGold }} />
-                Add Rule
-              </button>
-              <Button
-                className="text-white gap-2 hover:opacity-90"
-                style={{ backgroundColor: colors.idbRed }}
-                onClick={runQuery}
-                disabled={loading}
-              >
-                {loading
-                  ? <><Loader2 className="w-4 h-4 animate-spin" /> Running...</>
-                  : <><Play className="w-4 h-4 fill-white" /> Run Query</>}
-              </Button>
-            </div>
+              </>
+            )}
           </div>
 
-          {/* Results */}
+          {/* Results Card */}
           {hasRun && (
-            <div className="rounded-xl border flex flex-col overflow-hidden" style={{ backgroundColor: colors.cardBg, borderColor: '#e2e8f0' }}>
-              <div className="flex items-center justify-between px-5 py-3 border-b" style={{ borderColor: '#e2e8f0' }}>
-                <span className="font-semibold text-sm" style={{ color: colors.navyMain }}>
-                  Results — {entity.charAt(0).toUpperCase() + entity.slice(1)}
-                </span>
-                {resultMeta && (
-                  <span className="text-xs text-gray-500">
-                    {resultMeta.total} record{resultMeta.total !== 1 ? 's' : ''} found
-                  </span>
-                )}
+            <div className="results-card">
+              <div className="results-card__header">
+                <div className="results-card__title">
+                  <Database size={14} style={{ color: "var(--idb-gold)" }} />
+                  Results
+                </div>
+                <div className="results-card__meta">
+                  {!loading && <span className="results-count">{count} record{count !== 1 ? "s" : ""} found</span>}
+                  {results.length > 0 && (
+                    <button className="export-btn" onClick={handleExport}>
+                      <Download size={12} /> Export CSV
+                    </button>
+                  )}
+                </div>
               </div>
 
-              {/* Error */}
-              {error && (
-                <div className="flex items-center justify-center py-10 gap-2 text-red-500">
-                  <AlertCircle className="w-5 h-5" />
-                  <span className="text-sm">{error}</span>
+              {error && !loading && (
+                <div className="results-error">
+                  <AlertCircle size={20} style={{ color: "var(--idb-red)" }} />
+                  <span className="results-error__text">{error}</span>
                 </div>
               )}
 
-              {/* Empty */}
+              {loading && (
+                <div className="results-empty">
+                  <Loader2 size={22} className="spin" />
+                  <span className="results-empty__text">Running query...</span>
+                </div>
+              )}
+
               {!loading && !error && results.length === 0 && (
-                <div className="flex items-center justify-center py-10">
-                  <span className="text-gray-400 text-sm">No results found for this query.</span>
+                <div className="results-empty">
+                  <SearchX size={20} />
+                  <span className="results-empty__text">No records match this query.</span>
                 </div>
               )}
 
-              {/* Table */}
               {!loading && !error && results.length > 0 && (
-                <div className="overflow-auto">
-                  {/* Table header */}
+                <div className="results-table-wrap">
                   <div
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns: `repeat(${columns.length}, 1fr)`,
-                      minWidth: '600px',
-                      backgroundColor: colors.pageBg,
-                      borderBottom: '1px solid #e2e8f0',
-                      padding: '10px 16px',
-                      position: 'sticky', top: 0, zIndex: 5
-                    }}
+                    className="results-table-head"
+                    style={{ gridTemplateColumns: `repeat(${RESULT_COLUMNS.length}, 1fr)` }}
                   >
-                    {columns.map(col => (
-                      <div key={col} className="text-xs font-semibold uppercase tracking-wide" style={{ color: colors.navyMain }}>
-                        {col.replace(/([A-Z])/g, ' $1').trim()}
-                      </div>
+                    {RESULT_COLUMNS.map(col => (
+                      <div key={col} className="results-table-head-cell">{humanizeCol(col)}</div>
                     ))}
                   </div>
-
-                  {/* Rows */}
-                  {results.map((row, index) => (
+                  {results.map((row, i) => (
                     <div
-                      key={row.id || index}
-                      style={{
-                        display: 'grid',
-                        gridTemplateColumns: `repeat(${columns.length}, 1fr)`,
-                        minWidth: '600px',
-                        padding: '10px 16px',
-                        borderBottom: index < results.length - 1 ? '1px solid #e2e8f0' : 'none',
-                        alignItems: 'center'
-                      }}
-                      className="hover:bg-gray-50 transition-colors"
+                      key={row.id ?? i}
+                      className="results-table-row"
+                      style={{ gridTemplateColumns: `repeat(${RESULT_COLUMNS.length}, 1fr)` }}
                     >
-                      {columns.map(col => (
-                        <div key={col} className="text-sm text-gray-600 truncate">
-                          {col === 'status' || col === 'completionStatus' ? (
-                            <Badge style={
-                              row[col] === 'active' || row[col] === 'enrolled'
-                                ? { backgroundColor: '#dcfce7', color: '#16a34a', textTransform: 'capitalize' }
-                                : row[col] === 'completed'
-                                ? { backgroundColor: '#e0f2fe', color: '#0369a1', textTransform: 'capitalize' }
-                                : { backgroundColor: '#fee2e2', color: '#991b1b', textTransform: 'capitalize' }
-                            }>
-                              {row[col] || '—'}
-                            </Badge>
-                          ) : col.includes('Date') || col.includes('At') ? (
-                            row[col] ? new Date(row[col]).toLocaleDateString() : '—'
-                          ) : (
-                            row[col] ?? '—'
-                          )}
+                      {RESULT_COLUMNS.map(col => (
+                        <div key={col} className="results-table-cell">
+                          {STATUS_COLS.has(col)
+                            ? <StatusBadge value={row[col]} />
+                            : DATE_COLS(col)
+                              ? row[col] ? new Date(row[col]).toLocaleDateString() : "—"
+                              : row[col] ?? "—"}
                         </div>
                       ))}
                     </div>
@@ -320,6 +392,7 @@ export default function Analytics() {
               )}
             </div>
           )}
+
         </main>
       </div>
     </div>

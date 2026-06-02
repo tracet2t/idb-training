@@ -1,5 +1,8 @@
 import api from './api';
 
+
+
+const BASE_URL = "http://localhost:3000";
 const toInt = (val, fallback = undefined) => {
   const n = parseInt(val, 10);
   return Number.isFinite(n) ? n : fallback;
@@ -44,7 +47,7 @@ export function validateCreatePayload(raw) {
 
   if (errors.length) throw new Error(errors.join(" "));
 
-  return { businessName, ownerName, email, phone, district, sector, registrationNumber };
+  return { name: businessName, businessName,   ownerName, email, phone, district, sector, registrationNumber };
 }
 
 export function validateUpdatePayload(raw) {
