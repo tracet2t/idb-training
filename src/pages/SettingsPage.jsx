@@ -5,9 +5,9 @@ import Sidebar from '../components/Sidebar';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
+import { Select, SelectOption } from '../components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
-import { SelectOption } from '../components/ui/select';
 import '../styles/settings.css';
 
 export default function SettingsPage() {
@@ -65,7 +65,7 @@ export default function SettingsPage() {
         </div>
 
       {/* Settings Content */}
-      <div className='settings-content-wrapper'>
+      <div className={`settings-content-wrapper ${activeTab === 'profile' ? 'profile-no-scroll' : ''}`}>
         <Tabs value={activeTab} onValueChange={setActiveTab} className='settings-tabs'>
           <TabsList className='settings-tab-list'>
             <TabsTrigger value='profile'>
@@ -85,82 +85,81 @@ export default function SettingsPage() {
           {/* Profile Tab */}
           <TabsContent value='profile'>
             <Card className='settings-card'>
-              <CardHeader className='card-header-with-icon'>
-                <div className='card-title-wrapper'>
-                  <User size={24} className='card-icon' />
-                  <div>
-                    <CardTitle>Profile Settings</CardTitle>
-                    <CardDescription>Update your personal information</CardDescription>
+              <CardHeader>
+                <CardTitle>Profile Settings</CardTitle>
+             <CardDescription>Update your personal information</CardDescription>
+              </CardHeader>
+              <CardContent className='profile-card-content'>
+                <div className='profile-form-grid'>
+                  <div className='form-group'>
+                    <Label htmlFor='fullName'>Full Name</Label>
+                    <Input
+                      id='fullName'
+                      type='text'
+                      name='fullName'
+                      value={settings.fullName}
+                      onChange={handleInputChange}
+                      placeholder='Enter your full name'
+                    />
+                  </div>
+
+                  <div className='form-group'>
+                    <Label htmlFor='email'>Email Address</Label>
+                    <Input
+                      id='email'
+                      type='email'
+                      name='email'
+                      value={settings.email}
+                      onChange={handleInputChange}
+                      placeholder='Enter your email'
+                    />
+                  </div>
+
+                  <div className='form-group'>
+                    <Label htmlFor='phone'>Phone Number</Label>
+                    <Input
+                      id='phone'
+                      type='tel'
+                      name='phone'
+                      value={settings.phone}
+                      onChange={handleInputChange}
+                      placeholder='Enter your phone number'
+                    />
+                  </div>
+
+                  <div className='form-group'>
+                    <Label htmlFor='department'>Department</Label>
+                    <Input
+                      id='department'
+                      type='text'
+                      name='department'
+                      value={settings.department}
+                      onChange={handleInputChange}
+                      placeholder='Enter your department'
+                    />
+                  </div>
+
+                  <div className='form-group profile-full-width'>
+                    <Label htmlFor='role'>Role</Label>
+                    <Select
+                      id='role'
+                      name='role'
+                      value={settings.role}
+                      onChange={handleInputChange}
+                    >
+                      <SelectOption value='Administrator'>Administrator</SelectOption>
+                      <SelectOption value='Manager'>Manager</SelectOption>
+                      <SelectOption value='Staff'>Staff</SelectOption>
+                      <SelectOption value='Viewer'>Viewer</SelectOption>
+                    </Select>
                   </div>
                 </div>
-              </CardHeader>
-              <CardContent className='space-y-4 ' style={{ margin: '20px 200px' }}>
-                <div className='form-group'>
-                  <Label htmlFor='fullName'>Full Name</Label>
-                  <Input
-                    id='fullName'
-                    type='text'
-                    name='fullName'
-                    value={settings.fullName}
-                    onChange={handleInputChange}
-                    placeholder='Enter your full name'
-                  />
-                </div>
 
-                <div className='form-group'>
-                  <Label htmlFor='email'>Email Address</Label>
-                  <Input
-                    id='email'
-                    type='email'
-                    name='email'
-                    value={settings.email}
-                    onChange={handleInputChange}
-                    placeholder='Enter your email'
-                  />
+                <div className='profile-actions'>
+                  <Button onClick={handleSave} style={{ backgroundColor: colors.gold.main, color: '#000' }}>
+                    Save Changes
+                  </Button>
                 </div>
-
-                <div className='form-group'>
-                  <Label htmlFor='phone'>Phone Number</Label>
-                  <Input
-                    id='phone'
-                    type='tel'
-                    name='phone'
-                    value={settings.phone}
-                    onChange={handleInputChange}
-                    placeholder='Enter your phone number'
-                  />
-                </div>
-
-                <div className='form-group'>
-                  <Label htmlFor='department'>Department</Label>
-                  <Input
-                    id='department'
-                    type='text'
-                    name='department'
-                    value={settings.department}
-                    onChange={handleInputChange}
-                    placeholder='Enter your department'
-                  />
-                </div>
-
-                <div className='form-group '>
-                  <Label htmlFor='role'>Role</Label>
-                  <select
-                    id='role'
-                    name='role'
-                    value={settings.role}
-                    onChange={handleInputChange}
-                  >
-                    <option value='Administrator'>Administrator</option>
-                    <option value='Manager'>Manager</option>
-                    <option value='Staff'>Staff</option>
-                    <option value='Viewer'>Viewer</option>
-                  </select>
-                </div>
-
-                <Button onClick={handleSave} style={{ backgroundColor: colors.gold.main, color: '#000' }}>
-                  Save Changes
-                </Button>
               </CardContent>
             </Card>
           </TabsContent>
@@ -168,14 +167,9 @@ export default function SettingsPage() {
           {/* Notifications Tab */}
           <TabsContent value='notifications'>
             <Card className='settings-card'>
-              <CardHeader className='card-header-with-icon'>
-                <div className='card-title-wrapper'>
-                  <Bell size={24} className='card-icon' />
-                  <div>
-                    <CardTitle>Notification Settings</CardTitle>
-                    <CardDescription>Choose how you want to be notified</CardDescription>
-                  </div>
-                </div>
+              <CardHeader>
+                <CardTitle>Notification Settings</CardTitle>
+                <CardDescription>Choose how you want to be notified</CardDescription>
               </CardHeader>
               <CardContent className='space-y-4'>
                 <div className='toggle-item'>
@@ -233,16 +227,11 @@ export default function SettingsPage() {
           {/* Security Tab */}
           <TabsContent value='security'>
             <Card className='settings-card'>
-              <CardHeader className='card-header-with-icon'>
-                <div className='card-title-wrapper'>
-                  <Lock size={24} className='card-icon' />
-                  <div>
-                    <CardTitle>Security Settings</CardTitle>
-                    <CardDescription>Keep your account secure</CardDescription>
-                  </div>
-                </div>
+              <CardHeader>
+                <CardTitle>Security Settings</CardTitle>
+                <CardDescription>Keep your account secure</CardDescription>
               </CardHeader>
-              <CardContent className='space-y-4'>
+              <CardContent className='security-card-content'>
                 <div className='toggle-item'>
                   <div className='toggle-info'>
                     <h3>Two-Factor Authentication</h3>
@@ -260,25 +249,27 @@ export default function SettingsPage() {
 
                 <div className='security-section'>
                   <h3>Change Password</h3>
-                  <div className='mt-4 space-y-4'>
-                    <div>
+                  <div className='security-password-grid'>
+                    <div className='form-group'>
                       <Label htmlFor='currentPassword'>Current Password</Label>
                       <Input id='currentPassword' type='password' placeholder='Enter current password' />
                     </div>
-                    <div>
+                    <div className='form-group'>
                       <Label htmlFor='newPassword'>New Password</Label>
                       <Input id='newPassword' type='password' placeholder='Enter new password' />
                     </div>
-                    <div>
+                    <div className='form-group security-full-width'>
                       <Label htmlFor='confirmPassword'>Confirm Password</Label>
                       <Input id='confirmPassword' type='password' placeholder='Confirm new password' />
                     </div>
                   </div>
                 </div>
 
-                <Button onClick={handleSave} style={{ backgroundColor: colors.gold.main, color: '#000' }}>
-                  Update Security
-                </Button>
+                <div className='security-actions'>
+                  <Button onClick={handleSave} style={{ backgroundColor: colors.gold.main, color: '#000' }}>
+                    Update Security
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -286,14 +277,9 @@ export default function SettingsPage() {
           {/* Privacy Tab */}
           <TabsContent value='privacy'>
             <Card className='settings-card'>
-              <CardHeader className='card-header-with-icon'>
-                <div className='card-title-wrapper'>
-                  <Eye size={24} className='card-icon' />
-                  <div>
-                    <CardTitle>Privacy Settings</CardTitle>
-                    <CardDescription>Control your data and privacy</CardDescription>
-                  </div>
-                </div>
+              <CardHeader>
+                <CardTitle>Privacy Settings</CardTitle>
+                <CardDescription>Control your data and privacy</CardDescription>
               </CardHeader>
               <CardContent className='space-y-4'>
                 <div className='toggle-item'>

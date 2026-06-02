@@ -1,16 +1,11 @@
-import { useState } from 'react';
 import { BookOpen } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
-import FieldNotes from '../components/diary/FieldNotes';
-import ServiceReports from '../components/diary/ServiceReports';
 import CalendarEvents from '../components/diary/CalendarEvents';
+import useAuthStore from '../store/authStore';
 import '../styles/diary.css';
 
 export default function DiaryPage() {
-  const [activeTab, setActiveTab] = useState('field-notes');
-
-  // Mock user ID for UI development (replace with actual auth later)
-  const userId = 'user-demo-123';
+  const userId = useAuthStore((state) => state.user?.sub);
 
   const handleLogout = () => {
     window.location.href = '/login';
@@ -31,38 +26,15 @@ export default function DiaryPage() {
           </div>
         </div>
 
-        <div className='diary-tabs'>
-          <button
-            className={`tab-button ${activeTab === 'field-notes' ? 'active' : ''}`}
-            onClick={() => setActiveTab('field-notes')}
-          >
-            Field Notes
-          </button>
-          <button
-            className={`tab-button ${activeTab === 'service-reports' ? 'active' : ''}`}
-            onClick={() => setActiveTab('service-reports')}
-          >
-            Service Reports
-          </button>
-          <button
-            className={`tab-button ${activeTab === 'calendar' ? 'active' : ''}`}
-            onClick={() => setActiveTab('calendar')}
-          >
-            Calendar & Events
-          </button>
-        </div>
+        {/* Removed diary-tabs and button for Calendar & Events */}
 
         <div className='diary-content'>
-          {activeTab === 'field-notes' && (
-            <FieldNotes userId={userId} />
-          )}
-          
-          {activeTab === 'service-reports' && (
-            <ServiceReports userId={userId} />
-          )}
-          
-          {activeTab === 'calendar' && (
+          {userId ? (
             <CalendarEvents userId={userId} />
+          ) : (
+            <p style={{ padding: '1rem', color: '#64748b' }}>
+              Unable to load diary — user session not available.
+            </p>
           )}
         </div>
       </main>

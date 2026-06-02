@@ -33,7 +33,7 @@ function validateForm(form, isEdit = false) {
   if (!form.district)                   errs.district     = "Select a district";
   if (!form.sector?.trim())             errs.sector       = "Required";
   if (!form.registrationNumber?.trim()) errs.registrationNumber = "Required";
-  if (isEdit && !STATUSES.includes(form.status)) errs.status = "Select a status";
+  if (isEdit && form.status && !STATUSES.includes(form.status)) errs.status = "Select a status";
   return errs;
 }
 
@@ -308,13 +308,15 @@ function EditParticipantDialog({ participant, onSuccess }) {
                 {DISTRICTS.map(d => <option key={d} value={d}>{d.replace(/_/g, " ")}</option>)}
               </PIconSelect>
             </PField>
-            <PField label="Status" required error={fieldErrs.status}>
-              <PIconSelect icon={Hash} name="status" value={form.status || ""}
-                onChange={set} hasError={!!fieldErrs.status}>
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-              </PIconSelect>
-            </PField>
+            {form.status !== undefined && (
+              <PField label="Status" error={fieldErrs.status}>
+                <PIconSelect icon={Hash} name="status" value={form.status || ""}
+                  onChange={set} hasError={!!fieldErrs.status}>
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                </PIconSelect>
+              </PField>
+            )}
           </div>
           <div className="p-form-grid-2">
             <PField label="Sector" required error={fieldErrs.sector}>
@@ -433,12 +435,22 @@ export default function Participants() {
     setLoading(true); setError("");
     try {
       const result = await fetchParticipants({
-        page, limit, search, status: statusFilter, district: districtFilter,
+        page, limit, search, district: districtFilter,
       });
-      setParticipants(result.data);
+      const rows = statusFilter
+        ? result.data.filter((p) => p.status === statusFilter)
+        : result.data;
+      setParticipants(rows);
       setMeta(result.meta);
     } catch (err) {
-      if (err.message !== "Unauthorised") setError(err.message);
+      const status = err.response?.status;
+      const message =
+        err.response?.data?.message ||
+        err.message ||
+        (status === 401 || status === 403
+          ? "You don't have permission to view participants, or the session could not access this resource."
+          : "Failed to load participants.");
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -501,7 +513,7 @@ export default function Participants() {
               <Search
                 size={15}
                 style={{
-                  position:'absolute', left:11, top:'50%',
+                  position:'absolute', left:14, top:'50%',
                   transform:'translateY(-50%)',
                   color:'#64748b', pointerEvents:'none',
                   width:15, height:15, flexShrink:0,

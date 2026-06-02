@@ -1,7 +1,9 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Bell, Settings, LogOut, Menu, X, TrendingUp } from 'lucide-react';
 import { Line, Bar, Pie } from 'react-chartjs-2';
+import { useNavigate } from 'react-router-dom';
+import { logout } from '../services/authService';
+import useAuthStore from '../store/authStore';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -18,6 +20,7 @@ import colors from '../theme/color';
 import Sidebar from '../components/Sidebar';
 import StatsCard from '../components/dashboard/StatsCard';
 import RecentActivity from '../components/dashboard/RecentActivity';
+import { getUserInitial } from '../utils/userDisplay';
 import '../styles/dashboard.css';
 
 ChartJS.register(
@@ -35,6 +38,9 @@ ChartJS.register(
 export default function DashboardPage() {
   const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
+  const clearAuth = useAuthStore((state) => state.clearAuth);
+  const user = useAuthStore((state) => state.user);
+  const displayName = user?.displayName ?? 'User';
 
   const stats = [
     { label: 'Active Projects', value: '24', change: '+12%', color: 'navy' },
@@ -43,13 +49,15 @@ export default function DashboardPage() {
     { label: 'Success Rate', value: '94%', change: '+5%', color: 'navy' },
   ];
 
-  const handleLogout = () => {
-    // Add logout logic
-    console.log('Logging out...');
-  };
-
-  const handleSettings = () => {
-    navigate('/settings');
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error('Logout failed:', error);
+    } finally {
+      clearAuth();
+      navigate('/login', { replace: true });
+    }
   };
 
   return (
@@ -62,15 +70,15 @@ export default function DashboardPage() {
         <header className='dashboard-header'>
           <div className='header-left'>
             <h1>DASHBOARD</h1>
-            <p className='header-subtitle'>Welcome back, Admin</p>
+            <p className='header-subtitle'>Welcome back, {displayName}</p>
           </div>
 
           <div className='header-right'>
             <button className='icon-btn' title='Notifications'>
-              <Bell size={20} />
+              <Bell size={20} style={{ color: '#ffffff' }} />
             </button>
-            <button className='icon-btn' title='Settings' onClick={handleSettings}>
-              <Settings size={20} />
+            <button className='icon-btn' title='Settings' onClick={() => navigate('/settings')}>
+              <Settings size={20} style={{ color: '#ffffff' }} />
             </button>
 
             <div className='user-menu'>
@@ -82,9 +90,9 @@ export default function DashboardPage() {
                   className='avatar'
                   style={{ backgroundColor: colors.navy.main }}
                 >
-                  A
+                  {getUserInitial(displayName)}
                 </div>
-                <span>Admin</span>
+                <span>{displayName}</span>
               </button>
 
               {menuOpen && (
