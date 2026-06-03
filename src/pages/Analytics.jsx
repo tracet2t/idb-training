@@ -38,6 +38,7 @@ const ENTITY_OPTIONS = [
 // ── Change 1: Patch field labels after loading from backend ───────────
 // Renames "Program ID" → "Program Name" in the enrollments fields
 // without touching Sami's backend code.
+// Renames "Program ID" → "Program Name" in the enrollments fields
 function patchFieldLabels(fields) {
   if (!fields?.enrollments) return fields;
   return {
@@ -46,6 +47,29 @@ function patchFieldLabels(fields) {
       f.value === "programId" ? { ...f, label: "Program Name" } : f
     ),
   };
+}
+
+// Injects negated operator variants directly into each field's ops list
+const NEGATED_OPS = {
+  "contains":    "does not contain",
+  "equals":      "not equals",
+  "starts with": "does not start with",
+};
+
+function patchFieldOps(fields) {
+  if (!fields) return fields;
+  const patched = {};
+  for (const [entity, fieldList] of Object.entries(fields)) {
+    patched[entity] = fieldList.map(f => {
+      const newOps = [];
+      for (const op of f.ops) {
+        newOps.push(op);
+        if (NEGATED_OPS[op]) newOps.push(NEGATED_OPS[op]);
+      }
+      return { ...f, ops: newOps };
+    });
+  }
+  return patched;
 }
 
 // ── Value input — renders text, select, date, or number based on field type
@@ -101,7 +125,7 @@ export default function Analytics() {
     getAnalyticsFields()
       .then(data => {
         // Change 1: patch labels before storing in state
-        const patched = patchFieldLabels(data);
+        const patched = patchFieldOps(patchFieldLabels(data));
         setFields(patched);
         if (patched?.participants?.length) {
           const f = patched.participants[0];
@@ -280,14 +304,6 @@ export default function Analytics() {
                           <span className={`entity-badge entity-badge--${rule.entity}`}>
                             {rule.entity}
                           </span>
-
-                          {/* NOT toggle */}
-                          <button
-                            className={`not-btn${rule.not ? " active" : ""}`}
-                            onClick={() => updateRule(rule.id, "not", !rule.not)}
-                          >
-                            NOT
-                          </button>
 
                           {/* Field selector */}
                           <select
