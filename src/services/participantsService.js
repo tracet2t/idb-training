@@ -99,26 +99,35 @@ function unwrapBody(json) {
 }
 
 function normalizeListResponse(json) {
-  const body = unwrapBody(json);
-
-  if (Array.isArray(body)) {
+  // Handle { status: "success", data: [...], meta: { total, totalPages } }
+  if (json && json.status === "success" && Array.isArray(json.data) && json.meta) {
     return {
-      data: body,
-      meta: { total: body.length, totalPages: 1 },
+      data: json.data,
+      meta: {
+        total: toInt(json.meta.total, 0),
+        totalPages: toInt(json.meta.totalPages, 1),
+      },
     };
   }
 
-  const list = Array.isArray(body?.data) ? body.data : Array.isArray(body?.items) ? body.items : [];
+  // Fallback for plain arrays
+  if (Array.isArray(json)) {
+    return {
+      data: json,
+      meta: { total: json.length, totalPages: 1 },
+    };
+  }
 
+  // Fallback for other shapes
+  const list = Array.isArray(json?.data) ? json.data : [];
   return {
     data: list,
     meta: {
-      total: toInt(body?.meta?.total ?? body?.total, list.length),
-      totalPages: toInt(body?.meta?.totalPages ?? body?.totalPages, 1),
+      total: toInt(json?.meta?.total ?? json?.total, list.length),
+      totalPages: toInt(json?.meta?.totalPages ?? json?.totalPages, 1),
     },
   };
 }
-
 function getErrorMessage(err, fallback) {
   const data = err?.response?.data;
   if (typeof data === "string") return data;

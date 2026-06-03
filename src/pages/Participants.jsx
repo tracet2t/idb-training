@@ -438,31 +438,19 @@ export default function Participants() {
       const result = await fetchParticipants({
         page, limit, search, district: districtFilter,
       });
-      
+
       let rows = result.data;
-      
-      // Apply status filter
+
+      // Status filter is client-side only (no backend support yet)
       if (statusFilter) {
         rows = rows.filter((p) => p.status === statusFilter);
       }
-      
-      // Apply search filter
-      if (search) {
-        const searchLower = search.toLowerCase();
-        rows = rows.filter(p =>
-          p.businessName?.toLowerCase().includes(searchLower) ||
-          p.ownerName?.toLowerCase().includes(searchLower) ||
-          p.email?.toLowerCase().includes(searchLower)
-        );
-      }
-      
-      // Apply district filter
-      if (districtFilter) {
-        rows = rows.filter(p => p.district === districtFilter);
-      }
-      
+
       setParticipants(rows);
-      setMeta({ total: rows.length, totalPages: Math.ceil(rows.length / limit) });
+      setMeta({
+        total: result.meta.total,
+        totalPages: result.meta.totalPages,
+      });
     } catch (err) {
       const status = err.response?.status;
       const message =
