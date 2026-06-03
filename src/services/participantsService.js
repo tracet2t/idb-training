@@ -14,7 +14,7 @@ const toEnum = (val, allowed, fallback = "") =>
   allowed.includes(String(val)) ? String(val) : fallback;
 
 const DISTRICTS = [
-  "Colombo", "Gampaha", "Kaluthara", "Kurunegala", "Kandy", "Matale", "Nuwara_Eliya",
+  "Colombo", "Gampaha", "Kaluthara", "Kurunegala", "Kandy", "Matale", "Nuwara Eliya",
   "Galle", "Matara", "Hambantota", "Ampara", "Trincomalee", "Batticaloa", "Mullaitivu",
   "Puttalam", "Anuradhapura", "Polonnaruwa", "Badulla", "Monaragala", "Ratnapura",
   "Kegalle", "Jaffna", "Kilinochchi", "Mannar", "Vavuniya",
@@ -99,26 +99,35 @@ function unwrapBody(json) {
 }
 
 function normalizeListResponse(json) {
-  const body = unwrapBody(json);
-
-  if (Array.isArray(body)) {
+  // Handle { status: "success", data: [...], meta: { total, totalPages } }
+  if (json && json.status === "success" && Array.isArray(json.data) && json.meta) {
     return {
-      data: body,
-      meta: { total: body.length, totalPages: 1 },
+      data: json.data,
+      meta: {
+        total: toInt(json.meta.total, 0),
+        totalPages: toInt(json.meta.totalPages, 1),
+      },
     };
   }
 
-  const list = Array.isArray(body?.data) ? body.data : Array.isArray(body?.items) ? body.items : [];
+  // Fallback for plain arrays
+  if (Array.isArray(json)) {
+    return {
+      data: json,
+      meta: { total: json.length, totalPages: 1 },
+    };
+  }
 
+  // Fallback for other shapes
+  const list = Array.isArray(json?.data) ? json.data : [];
   return {
     data: list,
     meta: {
-      total: toInt(body?.meta?.total ?? body?.total, list.length),
-      totalPages: toInt(body?.meta?.totalPages ?? body?.totalPages, 1),
+      total: toInt(json?.meta?.total ?? json?.total, list.length),
+      totalPages: toInt(json?.meta?.totalPages ?? json?.totalPages, 1),
     },
   };
 }
-
 function getErrorMessage(err, fallback) {
   const data = err?.response?.data;
   if (typeof data === "string") return data;
@@ -171,6 +180,41 @@ export async function updateParticipant(id, raw) {
 export async function deleteParticipant(id) {
   await api.delete(`/participants/${id}`);
   return true;
+}
+
+/** POST /participants/bulk — Bulk import participants */
+export async function bulkImportParticipants(participants) {
+  try {
+    // Validate each participant
+    const validatedParticipants = participants.map(p => validateCreatePayload(p));
+
+    const response = await api.post("/participants/bulk", {
+      participants: validatedParticipants,
+    });
+
+    const result = unwrapBody(response.data);
+    return {
+      imported: result.imported || validatedParticipants.length,
+      skipped: result.skipped || 0,
+      errors: result.errors || [],
+    };
+  } catch (err) {
+    throw new Error(getErrorMessage(err, "Bulk import failed."));
+  }
+}
+
+/** POST /participants/check-duplicates — Check for duplicate registration numbers */
+export async function checkDuplicateRegistrationNumbers(registrationNumbers) {
+  try {
+    const response = await api.post("/participants/check-duplicates", {
+      registrationNumbers,
+    });
+
+    const result = unwrapBody(response.data);
+    return Array.isArray(result) ? result : result.duplicates || [];
+  } catch (err) {
+    throw new Error(getErrorMessage(err, "Duplicate check failed."));
+  }
 }
 
 export { DISTRICTS, STATUSES };

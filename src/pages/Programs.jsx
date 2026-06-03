@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import {
-  Search, Bell, Plus, Eye, Pencil, Trash2, Loader2,
+  Search, Plus, Eye, Pencil, Trash2, Loader2,
   AlertCircle, X, BookOpen, MapPin, Users, Hash, Tag,
   Calendar, DollarSign, Briefcase, CreditCard, ChevronDown,
 } from "lucide-react";
@@ -1024,10 +1024,6 @@ export default function Programs() {
             <h1>PROGRAMS</h1>
             <p>Manage all SME training initiatives and bootcamps.</p>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <button className="icon-btn" title="Notifications"><Bell size={20} /></button>
-            <AddProgramDialog onSuccess={load} />
-          </div>
         </header>
 
         <main className="programs-inner">
@@ -1109,6 +1105,10 @@ export default function Programs() {
                 )}
               </div>
             )}
+
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <AddProgramDialog onSuccess={load} />
+            </div>
           </div>
 
           {/* ── Table ── */}

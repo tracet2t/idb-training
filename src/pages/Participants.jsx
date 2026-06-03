@@ -1,5 +1,5 @@
 import {
-  Search, Bell, Plus, Pencil, Trash2, Loader2,
+  Search, Plus, Pencil, Trash2, Loader2,
   AlertCircle, X, Building2, User, Mail, Phone,
   MapPin, Briefcase, Hash, ChevronDown,   
 } from "lucide-react";
@@ -9,6 +9,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
 import Sidebar from "../components/Sidebar";
+import BulkImportDialog from "../components/BulkImportDialog";
 import {
   fetchParticipants, createParticipant, updateParticipant, deleteParticipant,
   DISTRICTS, STATUSES,
@@ -437,11 +438,19 @@ export default function Participants() {
       const result = await fetchParticipants({
         page, limit, search, district: districtFilter,
       });
-      const rows = statusFilter
-        ? result.data.filter((p) => p.status === statusFilter)
-        : result.data;
+
+      let rows = result.data;
+
+      // Status filter is client-side only (no backend support yet)
+      if (statusFilter) {
+        rows = rows.filter((p) => p.status === statusFilter);
+      }
+
       setParticipants(rows);
-      setMeta(result.meta);
+      setMeta({
+        total: result.meta.total,
+        totalPages: result.meta.totalPages,
+      });
     } catch (err) {
       const status = err.response?.status;
       const message =
@@ -494,12 +503,6 @@ export default function Participants() {
           <div className="participants-header-left">
             <h1>PARTICIPANTS</h1>
             <p>Manage SME owners and training attendees.</p>
-          </div>
-          <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-            <button className="icon-btn" title="Notifications">
-              <Bell size={20} />
-            </button>
-            <AddParticipantDialog onSuccess={load} />
           </div>
         </header>
 
@@ -587,6 +590,11 @@ export default function Participants() {
                 )}
               </div>
             )}
+
+            <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+              <BulkImportDialog onSuccess={load} />
+              <AddParticipantDialog onSuccess={load} />
+            </div>
           </div>
 
           {/* ── Table ── */}

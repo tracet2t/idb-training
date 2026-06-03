@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import {
-  Search, Bell, Plus, Eye, Pencil, Trash2, Loader2,
+  Search, Plus, Eye, Pencil, Trash2, Loader2,
   AlertCircle, X, Users, Hash, Tag, Calendar, DollarSign,
   ChevronDown, ClipboardList, BookOpen,
 } from "lucide-react";
@@ -817,15 +817,6 @@ export default function ProgramEnrollments() {
             <h1>ENROLLMENTS</h1>
             <p>Manage all program enrollment records.</p>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <button className="icon-btn" title="Notifications"><Bell size={20} /></button>
-            <AddEnrollmentDialog
-              onSuccess={load}
-              programOptions={programOptions}
-              participantOptions={participantOptions}
-              optionsLoading={optionsLoading}
-            />
-          </div>
         </header>
 
         <main className="enrollments-inner">
@@ -854,6 +845,15 @@ export default function ProgramEnrollments() {
                 ))}
               </div>
             )}
+
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <AddEnrollmentDialog
+                onSuccess={load}
+                programOptions={programOptions}
+                participantOptions={participantOptions}
+                optionsLoading={optionsLoading}
+              />
+            </div>
           </div>
 
           {/* ── Table ── */}

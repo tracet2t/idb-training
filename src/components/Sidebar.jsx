@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { Menu, X, LogOut } from 'lucide-react';
+import { Menu, X, LogOut, LayoutDashboard, Package, Users, Clipboard, BarChart3, Book, Settings } from 'lucide-react';
 import idbLogo from '../assets/idblogo.png';
 import '../styles/dashboard.css';
 
@@ -27,32 +27,40 @@ export default function Sidebar({ handleLogout }) {
       </div>
 
       <nav className='sidebar-nav'>
-        <NavLink to='/dashboard' className={navClassName}>
-          Dashboard
+        <NavLink to='/dashboard' className={navClassName} title='Dashboard'>
+          <LayoutDashboard size={18} />
+          {sidebarOpen && <span>Dashboard</span>}
         </NavLink>
-        <NavLink to='/programs' className={navClassName}>
-          Programs
+        <NavLink to='/programs' className={navClassName} title='Programs'>
+          <Package size={18} />
+          {sidebarOpen && <span>Programs</span>}
         </NavLink>
-        <NavLink to='/participants' className={navClassName}>
-          Participants
+        <NavLink to='/participants' className={navClassName} title='Participants'>
+          <Users size={18} />
+          {sidebarOpen && <span>Participants</span>}
         </NavLink>
-        <NavLink to='/enrollments' className={navClassName}>
-          Enrollments
+        <NavLink to='/enrollments' className={navClassName} title='Enrollments'>
+          <Clipboard size={18} />
+          {sidebarOpen && <span>Enrollments</span>}
         </NavLink>
-        <NavLink to='/analytics' className={navClassName}>
-          Analytics
+        <NavLink to='/analytics' className={navClassName} title='Analytics'>
+          <BarChart3 size={18} />
+          {sidebarOpen && <span>Analytics</span>}
         </NavLink>
-        <NavLink to='/diary' className={navClassName}>
-          Digital Diary
+        <NavLink to='/diary' className={navClassName} title='Digital Diary'>
+          <Book size={18} />
+          {sidebarOpen && <span>Digital Diary</span>}
         </NavLink>
-        <NavLink to='/settings' className={navClassName}>
-          Settings
+        <NavLink to='/settings' className={navClassName} title='Settings'>
+          <Settings size={18} />
+          {sidebarOpen && <span>Settings</span>}
         </NavLink>
       </nav>
 
       <div className='sidebar-footer'>
-        <button onClick={handleLogout} className='sidebar-logout'>
-          <LogOut size={18} /> Log Out
+        <button onClick={handleLogout} className='sidebar-logout' title='Log Out'>
+          <LogOut size={18} />
+          {sidebarOpen && <span>Log Out</span>}
         </button>
       </div>
     </aside>
