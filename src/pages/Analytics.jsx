@@ -35,6 +35,19 @@ const ENTITY_OPTIONS = [
   { value: "enrollments",  label: "Enrollments"  },
 ];
 
+// ── Change 1: Patch field labels after loading from backend ───────────
+// Renames "Program ID" → "Program Name" in the enrollments fields
+// without touching Sami's backend code.
+function patchFieldLabels(fields) {
+  if (!fields?.enrollments) return fields;
+  return {
+    ...fields,
+    enrollments: fields.enrollments.map(f =>
+      f.value === "programId" ? { ...f, label: "Program Name" } : f
+    ),
+  };
+}
+
 // ── Value input — renders text, select, date, or number based on field type
 function ValueInput({ field, fieldDef, value, onChange }) {
   if (!fieldDef) return (
@@ -69,10 +82,12 @@ function ValueInput({ field, fieldDef, value, onChange }) {
 // ── Main component ────────────────────────────────────────────────────
 
 export default function Analytics() {
-  const [fields,    setFields]    = useState(null);   // { participants: [...], programs: [...], enrollments: [...] }
-  const [matchMode, setMatchMode] = useState("all");
+  const [fields,    setFields]    = useState(null);
   const [rules,     setRules]     = useState([
-    { id: 1, entity: "participants", field: "", op: "", value: "", not: false },
+    // Change 2: each rule now has its own "connector" property ("AND" | "OR")
+    // The connector on rule[idx] is displayed BETWEEN rule[idx] and rule[idx+1].
+    // The last rule's connector is unused (no rule follows it).
+    { id: 1, entity: "participants", field: "", op: "", value: "", not: false, connector: "AND" },
   ]);
   const [results,  setResults]  = useState([]);
   const [count,    setCount]    = useState(0);
@@ -85,11 +100,12 @@ export default function Analytics() {
   useEffect(() => {
     getAnalyticsFields()
       .then(data => {
-        setFields(data);
-        // Set default field and op for first rule
-        if (data?.participants?.length) {
-          const f = data.participants[0];
-          setRules([{ id: 1, entity: "participants", field: f.value, op: f.ops[0], value: "", not: false }]);
+        // Change 1: patch labels before storing in state
+        const patched = patchFieldLabels(data);
+        setFields(patched);
+        if (patched?.participants?.length) {
+          const f = patched.participants[0];
+          setRules([{ id: 1, entity: "participants", field: f.value, op: f.ops[0], value: "", not: false, connector: "AND" }]);
         }
       })
       .catch(() => setFieldsErr("Failed to load fields from server."));
@@ -108,6 +124,7 @@ export default function Analytics() {
       op: f?.ops[0] || "",
       value: "",
       not: false,
+      connector: "AND",  // new rules default to AND
     }]);
   };
 
@@ -117,18 +134,37 @@ export default function Analytics() {
     setRules(prev => prev.map(r => {
       if (r.id !== id) return r;
       const updated = { ...r, [key]: val };
-      // When field changes, reset op and value
       if (key === "field" && fields) {
         const entityFields = fields[updated.entity] || [];
         const fieldDef = entityFields.find(f => f.value === val);
         updated.op = fieldDef?.ops[0] || "";
         updated.value = "";
       }
-      // When op changes, reset value
       if (key === "op") updated.value = "";
       return updated;
     }));
   };
+
+  // Change 2: toggle the connector on a specific rule by index
+  const toggleConnector = (ruleId) => {
+    setRules(prev => prev.map(r =>
+      r.id === ruleId
+        ? { ...r, connector: r.connector === "AND" ? "OR" : "AND" }
+        : r
+    ));
+  };
+
+  // Change 2: "Set all" helper — the header ALL/ANY buttons now set every
+  // rule's connector at once instead of controlling a global matchMode.
+  const setAllConnectors = (connector) => {
+    setRules(prev => prev.map(r => ({ ...r, connector })));
+  };
+
+  // Derive the "active" state for the header toggle buttons
+  const allConnectors = rules.map(r => r.connector);
+  const headerActive = allConnectors.every(c => c === "AND") ? "AND"
+                     : allConnectors.every(c => c === "OR")  ? "OR"
+                     : null;  // null = mixed, neither button is fully active
 
   const getFieldDef = (entity, fieldValue) => {
     if (!fields) return null;
@@ -148,6 +184,10 @@ export default function Analytics() {
     setHasRun(true);
     try {
       const validRules = rules.filter(r => r.field && r.op);
+      // Change 2: pass per-rule connectors to the service.
+      // matchMode is derived from connectors for backward-compat:
+      // if all AND → "all", if all OR → "any", else "all" (backend handles mixed via connectors).
+      const matchMode = allConnectors.every(c => c === "OR") ? "any" : "all";
       const json = await runAnalyticsQuery(validRules, matchMode);
       setResults(json.data?.results || []);
       setCount(json.data?.count || 0);
@@ -188,16 +228,24 @@ export default function Analytics() {
                 <Filter size={15} style={{ color: "var(--idb-gold)" }} />
                 <span className="query-card__title-text">Query conditions</span>
               </div>
+
+              {/* Change 2: header buttons now call setAllConnectors — they set ALL
+                  rules at once. Neither is "active" when connectors are mixed. */}
               <div className="match-toggle-group">
-                {["all", "any"].map(m => (
-                  <button
-                    key={m}
-                    className={`match-toggle-btn${matchMode === m ? " active" : ""}`}
-                    onClick={() => setMatchMode(m)}
-                  >
-                    {m === "all" ? "ALL (AND)" : "ANY (OR)"}
-                  </button>
-                ))}
+                <button
+                  className={`match-toggle-btn${headerActive === "AND" ? " active" : ""}`}
+                  onClick={() => setAllConnectors("AND")}
+                  title="Set all rules to AND"
+                >
+                  ALL (AND)
+                </button>
+                <button
+                  className={`match-toggle-btn${headerActive === "OR" ? " active" : ""}`}
+                  onClick={() => setAllConnectors("OR")}
+                  title="Set all rules to OR"
+                >
+                  ANY (OR)
+                </button>
               </div>
             </div>
 
@@ -225,17 +273,6 @@ export default function Analytics() {
 
                     return (
                       <div key={rule.id}>
-                        {idx > 0 && (
-                          <div style={{ display: "flex", justifyContent: "center", margin: "2px 0" }}>
-                            <span
-                              className="rule-connector"
-                              style={{ cursor: "pointer" }}
-                              onClick={() => setMatchMode(m => m === "all" ? "any" : "all")}
-                            >
-                              {matchMode === "all" ? "AND" : "OR"}
-                            </span>
-                          </div>
-                        )}
                         <div className="rule-row">
                           <span className="rule-index">{idx + 1}</span>
 
@@ -291,6 +328,21 @@ export default function Analytics() {
                             <Trash2 size={15} />
                           </button>
                         </div>
+
+                        {/* Change 2: per-rule connector pill — shown AFTER each rule
+                            except the last one. Clicking toggles only THIS rule's connector. */}
+                        {idx < rules.length - 1 && (
+                          <div style={{ display: "flex", justifyContent: "center", margin: "2px 0" }}>
+                            <span
+                              className="rule-connector"
+                              style={{ cursor: "pointer" }}
+                              onClick={() => toggleConnector(rule.id)}
+                              title="Click to toggle AND / OR"
+                            >
+                              {rule.connector}
+                            </span>
+                          </div>
+                        )}
                       </div>
                     );
                   })}
